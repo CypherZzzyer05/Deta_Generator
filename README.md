@@ -6,32 +6,34 @@
 
 ## 在计算机上运行
 
+**2026-10-14更新：Au厚度改为100 nm（包版本0.1.1）。** 更新包不会修改已有的`job.json`；旧150 nm任务保留原设置。请用下方新目录`jobs/au100_4`重新执行`init`。厚度进入物理指纹，100/150 nm数据禁止续算或合并混用。0.1.0 wheel保留供历史任务复现。
+
 使用Lumerical版本兼容的Python环境；本机实际连接验证使用Python3.10、Lumerical2024 R1。必须有可用FDTD求解许可，包不包含Lumerical软件、许可或凭据。
 
 ```powershell
 git clone https://github.com/CypherZzzyer05/Deta_Generator.git
 cd Deta_Generator
-python -m pip install .
+python -m pip install --upgrade .
 
 # 先创建任务。12只是流程验证样本量，正式训练需按研究目标扩大。
-python -m deta_generator init --job-dir jobs/au4 --preset au-4 --samples 12 --threads 16
+python -m deta_generator init --job-dir jobs/au100_4 --preset au-4 --samples 12 --threads 16
 # 指向新计算机的安装路径；以下路径是示例，请改成实际版本与目录。
 $env:LUMERICAL_LUMAPI_PATH = 'C:\Program Files\Lumerical\v241\api\python\lumapi.py'
-python -m deta_generator doctor --config jobs/au4/job.json
-python -m deta_generator preflight --config jobs/au4/job.json
-python -m deta_generator plan --config jobs/au4/job.json
+python -m deta_generator doctor --config jobs/au100_4/job.json
+python -m deta_generator preflight --config jobs/au100_4/job.json
+python -m deta_generator plan --config jobs/au100_4/job.json
 # 先算一个样本，核对资源、耗时、材料和光谱，然后去掉limit采集完整计划。
-python -m deta_generator generate --config jobs/au4/job.json --limit 1
-python -m deta_generator generate --config jobs/au4/job.json
-python -m deta_generator status --config jobs/au4/job.json
+python -m deta_generator generate --config jobs/au100_4/job.json --limit 1
+python -m deta_generator generate --config jobs/au100_4/job.json
+python -m deta_generator status --config jobs/au100_4/job.json
 ```
 
-只需安装包时，也可下载仓库 `artifacts/deta_generator-0.1.0-py3-none-any.whl`，运行 `python -m pip install <wheel文件路径>`。wheel内已带默认配置和As₂Se₃材料文件。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
+只需安装包时，也可下载仓库 `artifacts/deta_generator-0.1.1-py3-none-any.whl`，运行 `python -m pip install <wheel文件路径>`。wheel内已带默认配置和As₂Se₃材料文件。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
 
 也可使用安装后的 `deta-generator` 命令，或Windows脚本：
 
 ```powershell
-.\scripts\run-windows.ps1 -Command generate -Config jobs/au4/job.json -Threads 16 -Limit 1
+.\scripts\run-windows.ps1 -Command generate -Config jobs/au100_4/job.json -Threads 16 -Limit 1
 ```
 
 `doctor`检查API连接、版本和实际材料拟合；`preflight`另外构造首个计划结构，读取实际网格和原生内存估计，**二者均不运行电磁求解**。它们不证明求解许可、光谱收敛或设备精度。生成时每个结构都重新做网格与内存检查；内存不足则拒绝启动该样本。原生内存建议是近似值，尤其共形网格仍需实际试算。
@@ -40,7 +42,7 @@ python -m deta_generator status --config jobs/au4/job.json
 
 预设有 `au-4`、`au-8`、`ag-4`、`ag-8`、`bare-4`、`bare-8`。4 nm预设为默认；全域每个实际x/y/z网格单元必须严格小于10 nm，金属区域z网格2.5 nm。8 nm用于探索，需要针对目标结构与更细网格复核；当前研究候选第一反射谷8→4 nm变化约4.10个百分点，超过既定3个百分点标准，不能直接认定8 nm足够精确。
 
-结构为As₂Se₃ / 350 nm SiO₂ / 150 nm金属 / 空气，法向x偏振，700–1700 nm。`bare`使用 `remove_metal=true`，仅移除金属物体，保留有限基板、源、监测器、下方空气域及金属区网格，并要求移除前后网格一致。**不能用 `metal_material=null` 替代这个受控不镀金结构。** 当前有限薄基板不代表毫米厚实物基片。
+版本0.1.1的新Au预设为As₂Se₃ / 350 nm SiO₂ / **100 nm Au** / 空气，法向x偏振，700–1700 nm；Ag预设仍显式使用150 nm。Au厚度是固定物理设置，七个几何自由度不变。`bare`以100 nm Au布局作为参考，使用 `remove_metal=true`，仅移除金属物体，保留有限基板、源、监测器、下方空气域及金属区网格，并要求移除前后网格一致。**不能用 `metal_material=null` 替代这个受控不镀金结构。** 当前有限薄基板不代表毫米厚实物基片。
 
 每个训练样本输出1000个均匀波长点的R/T/A。1000是每条光谱的点数，`--samples`才是不同几何结构数量。为控制数据集成本，这个包默认只记录远场光谱；当前本机金层/网格研究的两平面E/H分析与报告仍在独立研究项目中进行。
 
@@ -54,10 +56,10 @@ python -m deta_generator status --config jobs/au4/job.json
 
 ```powershell
 # 两条命令在不同终端/机器执行，使用同一job.json与同一版本的包。
-python -m deta_generator generate --config jobs/au4/job.json --shard-count 2 --shard-index 0 --output jobs/au4/shard0 --threads 16
-python -m deta_generator generate --config jobs/au4/job.json --shard-count 2 --shard-index 1 --output jobs/au4/shard1 --threads 16
+python -m deta_generator generate --config jobs/au100_4/job.json --shard-count 2 --shard-index 0 --output jobs/au100_4/shard0 --threads 16
+python -m deta_generator generate --config jobs/au100_4/job.json --shard-count 2 --shard-index 1 --output jobs/au100_4/shard1 --threads 16
 # 两个任务结束后，把分片目录复制到同一机器并合并。
-python -m deta_generator merge --config jobs/au4/job.json --shards jobs/au4/shard0 jobs/au4/shard1 --output jobs/au4/merged
+python -m deta_generator merge --config jobs/au100_4/job.json --shards jobs/au100_4/shard0 jobs/au100_4/shard1 --output jobs/au100_4/merged
 ```
 
 合并验证配置、采样计划、划分、校验值、实际网格、求解状态、版本及拟合；冲突的重复ID拒绝合并。合并不会删除分片。一个任务的 `plan`已固定采样几何；多机器首次建立计划时需使用相同NumPy版本以确保采样序列一致，合并时仍逐项核对实际几何。
@@ -76,6 +78,6 @@ python -m deta_generator merge --config jobs/au4/job.json --shards jobs/au4/shar
 
 As₂Se₃采用Joseph实测700 nm薄膜n/k，CSV原始SHA256为 `9e6ee6d3b584f33226d7201e2b2e12490726cb3b8256726754e5aca9cae64ce9`；材料说明与CC0来源随包提供。实测至1688 nm，最后12 nm是显式端点延拓。Au/Ag使用本机Lumerical Palik库，未随包分发其数据。
 
-**当前Au默认FDTD拟合存在明显损耗误差。** 本包保持已有研究配置以便复现，输出记录材料精度未验证及实际拟合误差，质量标记沿用 `pipeline_validation`，现有Metaformer训练入口需要显式允许流程验证数据才能读取。它不会悄悄替换材料或将生成数据宣称为实验预测。大规模采集前请查看 `doctor.json` 的材料误差；本机研究正在独立核对和处理这个问题。网格检查、自动关断与材料准确性是不同验证项。
+**当前Au默认FDTD拟合存在明显损耗误差。** 本包保持已有研究配置以便复现，输出记录材料精度未验证及实际拟合误差，质量标记沿用 `pipeline_validation`，现有Metaformer训练入口需要显式允许流程验证数据才能读取。它不会悄悄替换材料或将生成数据宣称为实验预测。大规模采集前请查看 `doctor.json` 的材料误差；改为100 nm没有修复材料拟合；该问题的器件级验证仍待后续研究。网格检查、自动关断与材料准确性是不同验证项。
 
 软件验证使用测试替身检查续算、迁移、分片及完整性，测试数据不作为研究数据。真实研究求解来自Lumerical；目标机器上的许可、运行速度和材料拟合必须在该机器试算确认。继承来源与方法文档见 [SOURCE.md](SOURCE.md)。

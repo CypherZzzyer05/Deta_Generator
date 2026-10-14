@@ -1,6 +1,6 @@
 {
   "lumapi_path": null,
-  "output_dir": "../data/as2se3_au_fine8",
+  "output_dir": "../data/as2se3_au100_fine8",
   "sample_count": 12,
   "seed": 20261011,
   "parameter_range_source": "Exploratory near-IR engineering bounds; not validated fabrication bounds",
@@ -52,7 +52,7 @@
     "resonator_nk_csv": "../materials/as2se3_joseph_700nm.csv",
     "material_max_extension_nm": 12,
     "metal_material": "Au (Gold) - Palik",
-    "metal_thickness_nm": 150,
+    "metal_thickness_nm": 100,
     "metal_mesh_nm": 2.5,
     "processes": 1,
     "threads": 8,

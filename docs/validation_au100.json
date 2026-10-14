@@ -1,0 +1,151 @@
+{
+  "date": "2026-10-14",
+  "package_version": "0.1.1",
+  "software_tests": {
+    "count": 27,
+    "passed": true,
+    "spectra_are_test_only": true,
+    "test_log_sha256": "5382067c2705ea4278d89763fade3c7a8f9f09991b780ad923d230a9704125a5"
+  },
+  "wheel": {
+    "filename": "deta_generator-0.1.1-py3-none-any.whl",
+    "sha256": "a6c71b4fd5dcdb38c4d97b5e04ec875c77ff6580ab09fe81fff2d783af8a44d7",
+    "isolated_install_checked": true,
+    "source_and_asset_files_byte_verified": 12
+  },
+  "installed_presets": {
+    "au-4": {
+      "metal_thickness_nm": 100,
+      "maximum_mesh_nm": 4.0,
+      "reference_metal_removed": false,
+      "planned_samples": 4
+    },
+    "au-8": {
+      "metal_thickness_nm": 100,
+      "maximum_mesh_nm": 8.0,
+      "reference_metal_removed": false,
+      "planned_samples": 4
+    },
+    "bare-4": {
+      "metal_thickness_nm": 100,
+      "maximum_mesh_nm": 4.0,
+      "reference_metal_removed": true,
+      "planned_samples": 4
+    },
+    "bare-8": {
+      "metal_thickness_nm": 100,
+      "maximum_mesh_nm": 8.0,
+      "reference_metal_removed": true,
+      "planned_samples": 4
+    },
+    "ag-4": {
+      "metal_thickness_nm": 150,
+      "maximum_mesh_nm": 4.0,
+      "reference_metal_removed": false,
+      "planned_samples": 4
+    },
+    "ag-8": {
+      "metal_thickness_nm": 150,
+      "maximum_mesh_nm": 8.0,
+      "reference_metal_removed": false,
+      "planned_samples": 4
+    }
+  },
+  "native_preflights": {
+    "au-4": {
+      "implementation_sha256": {
+        "config.py": "2e26cb6bf1b0a735643d300bef9bd89d927096a9abb4cd27c7af2fda5f92ec66",
+        "lumerical.py": "05676949a83ce94ade7dc6a2e04c574dfda6c86c3cffd3ac378b6c04a5269483",
+        "pipeline.py": "79ae284deb752aa8dbd6edd1869369a8c35d30755fff935a32ab1e82c83495f5"
+      },
+      "solver_run_performed": false,
+      "fdtd_version": "8.31.3633",
+      "native_layout_verified": true,
+      "actual_mesh": {
+        "x": {
+          "points": 164,
+          "maximum_step_nm": 3.9862601696397455,
+          "minimum_step_nm": 3.9862601696388986
+        },
+        "y": {
+          "points": 164,
+          "maximum_step_nm": 3.9862601696397455,
+          "minimum_step_nm": 3.9862601696388986
+        },
+        "z": {
+          "points": 804,
+          "maximum_step_nm": 3.992121509561934,
+          "minimum_step_nm": 2.499999999992194
+        }
+      },
+      "recommended_ram_gib": 4.5473365339686875,
+      "material_fit_errors": {
+        "As2Se3 - Joseph 700nm film (2020)": {
+          "max_n_error": 0.0068060458615883945,
+          "max_k_error": 0.0017094041668339333,
+          "max_imaginary_permittivity_error": 0.009892438894474886,
+          "accuracy_certified": false
+        },
+        "SiO2 (Glass) - Palik": {
+          "max_n_error": 0.008349388224864862,
+          "max_k_error": 0.0,
+          "max_imaginary_permittivity_error": 0.0,
+          "accuracy_certified": false
+        },
+        "Au (Gold) - Palik": {
+          "max_n_error": 0.6558529804086315,
+          "max_k_error": 0.9026045749913916,
+          "max_imaginary_permittivity_error": 14.173032698570964,
+          "accuracy_certified": false
+        }
+      },
+      "metal_reference_thickness_nm": 100
+    },
+    "bare-4": {
+      "implementation_sha256": {
+        "config.py": "2e26cb6bf1b0a735643d300bef9bd89d927096a9abb4cd27c7af2fda5f92ec66",
+        "lumerical.py": "05676949a83ce94ade7dc6a2e04c574dfda6c86c3cffd3ac378b6c04a5269483",
+        "pipeline.py": "79ae284deb752aa8dbd6edd1869369a8c35d30755fff935a32ab1e82c83495f5"
+      },
+      "solver_run_performed": false,
+      "fdtd_version": "8.31.3633",
+      "native_layout_verified": true,
+      "actual_mesh": {
+        "x": {
+          "points": 164,
+          "maximum_step_nm": 3.9862601696397455,
+          "minimum_step_nm": 3.9862601696388986
+        },
+        "y": {
+          "points": 164,
+          "maximum_step_nm": 3.9862601696397455,
+          "minimum_step_nm": 3.9862601696388986
+        },
+        "z": {
+          "points": 804,
+          "maximum_step_nm": 3.992121509561934,
+          "minimum_step_nm": 2.499999999992194
+        }
+      },
+      "recommended_ram_gib": 4.508087634169193,
+      "material_fit_errors": {
+        "As2Se3 - Joseph 700nm film (2020)": {
+          "max_n_error": 0.0068060458615883945,
+          "max_k_error": 0.0017094041668339333,
+          "max_imaginary_permittivity_error": 0.009892438894474886,
+          "accuracy_certified": false
+        },
+        "SiO2 (Glass) - Palik": {
+          "max_n_error": 0.008349388224864862,
+          "max_k_error": 0.0,
+          "max_imaginary_permittivity_error": 0.0,
+          "accuracy_certified": false
+        }
+      },
+      "metal_reference_thickness_nm": 100
+    }
+  },
+  "real_100nm_spectrum_solved": false,
+  "material_accuracy_certified": false,
+  "scope": "Au100 presets and controlled bare reference; Ag150 retained; no long electromagnetic solve."
+}

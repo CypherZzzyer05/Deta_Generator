@@ -112,6 +112,16 @@ class PortableGeneratorTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'different configuration'):
             generate_dataset(altered)
 
+    def test_150nm_samples_cannot_resume_as_100nm(self):
+        legacy = replace(self.config, simulation=replace(self.config.simulation, metal_thickness_nm=150))
+        generate_dataset(legacy, limit=1)
+        sample = self.config.output_dir/'samples/sample_000000.npz'
+        previous_checksum = checksum(sample)
+        with self.assertRaisesRegex(ValueError, 'different configuration'):
+            generate_dataset(self.config)
+        self.assertEqual(TestOnlySimulator.calls, 1)
+        self.assertEqual(checksum(sample), previous_checksum)
+
     def test_fixed_plan_detects_modified_geometry(self):
         with directory_lock(self.config.output_dir):
             prepare_manifest(self.config)
@@ -158,6 +168,16 @@ class PortableGeneratorTests(unittest.TestCase):
         generate_dataset(b, sample_ids=(1,))
         with self.assertRaisesRegex(ValueError, 'physics/sampling'):
             merge_shards(self.config, [a.output_dir, b.output_dir])
+
+    def test_merge_rejects_100nm_and_150nm_gold(self):
+        current = replace(self.config, output_dir=self.root/'gold100')
+        legacy = replace(self.config, output_dir=self.root/'gold150',
+                         simulation=replace(self.config.simulation, metal_thickness_nm=150))
+        generate_dataset(current, sample_ids=(0,))
+        generate_dataset(legacy, sample_ids=(1,))
+        with self.assertRaisesRegex(ValueError, 'physics/sampling'):
+            merge_shards(self.config, [current.output_dir, legacy.output_dir])
+        self.assertTrue((legacy.output_dir/'samples/sample_000001.npz').is_file())
 
     def test_merge_rejects_changed_actual_grid_even_with_updated_checksum(self):
         a = replace(self.config, output_dir=self.root/'a')

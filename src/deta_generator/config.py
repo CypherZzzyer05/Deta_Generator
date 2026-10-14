@@ -116,7 +116,7 @@ class SimulationSettings:
     material_max_extension_nm: float = 0.0
     metal_material: str | None = None
     remove_metal: bool = False
-    metal_thickness_nm: float = 150.0
+    metal_thickness_nm: float = 100.0
     metal_mesh_nm: float = 5.0
     bottom_padding_nm: float = 1000.0
     polarization_deg: float = 0.0

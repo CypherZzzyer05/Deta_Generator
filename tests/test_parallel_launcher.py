@@ -29,6 +29,13 @@ class ParallelLauncherTests(unittest.TestCase):
 import json, os, pathlib, sys, time
 from test_generator import TestOnlySimulator
 import deta_generator.pipeline as pipeline
+import deta_generator.cli as cli
+def test_native_check(config, preflight=False):
+    # Test the entry sequencing, not native layout accuracy or FDTD physics.
+    assert preflight and config.simulation.metal_mesh_nm == 8
+    (pathlib.Path(os.environ['PARALLEL_TEST_TRACE']).parent/'preflight_called').write_text('test fixture only')
+    return {'solver_run_performed':False,'test_fixture_only':True}
+cli.native_check = test_native_check
 class TimedTestSimulator(TestOnlySimulator):
     def __enter__(self):
         self.start = time.time()
@@ -114,6 +121,22 @@ pipeline.FDTDSimulator = TimedTestSimulator
         changed = self.invoke('prepare',samples=100)
         self.assertNotEqual(changed.returncode,0)
         self.assertEqual((self.job/'job.json').read_bytes(),original)
+
+    def test_pycharm_module_start_preflights_generates_and_merges(self):
+        command = [sys.executable,'-m','deta_generator','parallel','--job-dir',str(self.job),
+                   '--samples','8','--workers','4','--concurrency','2','--threads','1']
+        result = subprocess.run(command,env=self.env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
+                                text=True,encoding='utf-8',errors='replace',timeout=90)
+        self.assertEqual(result.returncode,0,result.stdout)
+        self.assertTrue((self.root/'preflight_called').exists())
+        self.assertIn('Starting CPU dataset generation',result.stdout)
+        self.assertIn('success=8/8',result.stdout)
+        with np.load(self.job/'merged/dataset.npz') as data:
+            self.assertEqual(data['sample_ids'].tolist(),list(range(8)))
+        status = subprocess.run(command+['--parallel-action','status'],env=self.env,stdout=subprocess.PIPE,
+                                stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',timeout=30)
+        self.assertEqual(status.returncode,0,status.stdout)
+        self.assertIn('success=8/8',status.stdout)
 
 
 if __name__ == '__main__': unittest.main()

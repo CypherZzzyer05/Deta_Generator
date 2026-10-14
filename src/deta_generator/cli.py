@@ -107,12 +107,15 @@ def native_check(config, preflight=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=('init', 'doctor', 'preflight', 'plan', 'generate', 'pack', 'merge', 'status'))
+    parser.add_argument('command', choices=('init', 'doctor', 'preflight', 'plan', 'generate', 'pack', 'merge', 'status', 'parallel'))
     parser.add_argument('--config', type=Path, default=Path('job.json'))
-    parser.add_argument('--job-dir', type=Path, default=Path('jobs/as2se3'))
+    parser.add_argument('--job-dir', type=Path)
     parser.add_argument('--preset', choices=('au-metal', 'ag-metal', 'bare-metal', 'au-4', 'au-8', 'ag-4', 'ag-8', 'bare-4', 'bare-8'), default='au-metal')
     parser.add_argument('--metal-mesh-nm', type=float, help='Metal z step for init with a *-metal preset (default: 2.5 nm)')
-    parser.add_argument('--samples', type=int, default=12)
+    parser.add_argument('--samples', type=int)
+    parser.add_argument('--workers', type=int, default=4, help='Fixed number of parallel dataset shards')
+    parser.add_argument('--concurrency', type=int, help='Maximum simultaneous FDTD jobs (default: workers)')
+    parser.add_argument('--parallel-action', choices=('start', 'prepare', 'run', 'status', 'merge'), default='start')
     parser.add_argument('--threads', type=int)
     parser.add_argument('--processes', type=int)
     parser.add_argument('--lumapi', help='Path to installed lumapi.py or its containing directory')
@@ -126,14 +129,22 @@ def main(argv=None):
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s %(levelname)s %(message)s')
     try:
+        if args.command == 'parallel':
+            if args.metal_mesh_nm is not None or args.output is not None or args.limit is not None or args.processes is not None:
+                raise ValueError('Parallel uses a fixed Au100/metal8 task; use --job-dir, --workers, --concurrency and --threads')
+            from .parallel import run_parallel
+            return run_parallel(args.job_dir or Path('jobs/au100_metal8_100'),
+                                100 if args.samples is None else args.samples, args.workers, args.concurrency,
+                                16 if args.threads is None else args.threads, args.lumapi, args.parallel_action, args.pack_every)
         if args.metal_mesh_nm is not None and args.command != 'init':
             raise ValueError('--metal-mesh-nm is an init option; use a new task when changing the mesh')
         if args.command == 'init':
-            if args.samples < 1:
+            samples = 12 if args.samples is None else args.samples
+            if samples < 1:
                 raise ValueError('samples must be positive')
             if args.threads is not None and args.threads < 1:
                 raise ValueError('threads must be positive')
-            result = initialize(args.job_dir, args.preset, args.samples,
+            result = initialize(args.job_dir or Path('jobs/as2se3'), args.preset, samples,
                                 args.threads if args.threads is not None else 8, args.lumapi, args.metal_mesh_nm)
         else:
             config = configured(args)

@@ -6,7 +6,7 @@
 
 ## 在计算机上运行
 
-**2026-10-14更新：默认采用仅金属层加密（包版本0.1.2），Au厚度仍为100 nm。** 按用户实战设置，撤掉全域和四聚体附近的覆盖网格，其他区域使用Lumerical自动网格。更新包不会修改已有的`job.json`；请用新目录`jobs/au100_metal`创建任务。网格模式和代码进入物理指纹，新旧数据禁止续算或合并混用。历史任务继续使用对应0.1.0/0.1.1 wheel。
+**2026-10-14更新：0.1.3新增PyCharm并行运行入口，沿用0.1.2的仅金属层加密求解代码，Au厚度仍为100 nm。** 按用户实战设置，撤掉全域和四聚体附近的覆盖网格，其他区域使用Lumerical自动网格。更新包不会修改已有的`job.json`。0.1.2与0.1.3物理实现逐字节相同，可以继续对应任务；历史0.1.0/0.1.1任务仍用对应wheel，禁止跨网格策略混用数据。
 
 使用Lumerical版本兼容的Python环境；本机实际连接验证使用Python3.10、Lumerical2024 R1。必须有可用FDTD求解许可，包不包含Lumerical软件、许可或凭据。
 
@@ -28,7 +28,7 @@ python -m deta_generator generate --config jobs/au100_metal/job.json
 python -m deta_generator status --config jobs/au100_metal/job.json
 ```
 
-没有Git时可下载仓库ZIP，解压后在包含`pyproject.toml`的目录执行`python -m pip install --upgrade .`。也可下载仓库 `artifacts/deta_generator-0.1.2-py3-none-any.whl`，运行 `python -m pip install --upgrade <wheel文件路径>`。wheel内已带默认配置和As₂Se₃材料文件。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
+没有Git时可下载仓库ZIP，解压后在包含`pyproject.toml`的目录执行`python -m pip install --upgrade .`。也可下载仓库 `artifacts/deta_generator-0.1.3-py3-none-any.whl`，运行 `python -m pip install --upgrade <wheel文件路径>`。wheel内已带默认配置、As₂Se₃材料文件和Windows并行控制器。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
 
 也可使用安装后的 `deta-generator` 命令，或Windows脚本：
 
@@ -66,7 +66,7 @@ Au预设为As₂Se₃ / 350 nm SiO₂ / **100 nm Au** / 空气，法向x偏振�
 
 强机器可先提高单个FDTD任务的线程数；要多任务并行时，按下面方式给不同任务独立输出目录。每个任务占用独立许可和内存，线程总数与峰值内存由使用者按机器资源配置。不要让多个任务写入同一输出目录。
 
-**100样本自动启动入口：** 新增Windows脚本`scripts/run-parallel.ps1`，默认四片、最多四路并发、每路16线程，成功后自动校验合并；支持两路排队执行四片、总体进度和失败续算。它调用已安装的0.1.2包，不改变求解代码或网格设置。操作和实测时间估算见[100样本并行说明](docs/parallel_100.md)。
+**100样本自动启动入口：** 0.1.3可在PyCharm的Python运行配置中直接调用`parallel`，自动准备、预检、启动四片并合并。默认最多四路并发、每路16线程；运行窗口显示总体进度，支持失败续算。也保留独立Windows脚本`scripts/run-parallel.ps1`。操作和实测时间估算见[100样本并行说明](docs/parallel_100.md)。
 
 ```powershell
 # 两条命令在不同终端/机器执行，使用同一job.json与同一版本的包。
@@ -89,6 +89,14 @@ python -m deta_generator merge --config jobs/au100_metal/job.json --shards jobs/
 光谱保留入射功率归一化R，不做逐条min-max缩放、不裁剪不合理结果。未达到自动关断时最多四次延长时间；不合格样本排除在训练数据之外。可用 `pack`再次校验和打包已有成功数据，全程不调用求解器。
 
 ## PyCharm与运行进度
+
+**100样本并行：** 复制已有`au8nm`的Python运行配置，模块保持`deta_generator`，参数栏填：
+
+```text
+parallel --job-dir jobs/au100_metal8_100 --samples 100 --workers 4 --concurrency 4 --threads 16
+```
+
+安装0.1.3后点击运行即可。入口自动创建新任务、读取首个原生布局/网格，再启动采集；全部成功后合并到`jobs/au100_metal8_100/merged/dataset.npz`。无须单独下载PowerShell脚本或创建四个运行配置。解释器选择`fdtd_gen`，工作目录保持项目根目录，沿用v251环境变量。取消勾选“将内容根添加到PYTHONPATH”和“将源根添加到PYTHONPATH”，避免解压目录中的旧源码遮蔽已安装包。详细设置及状态入口见[并行说明](docs/parallel_100.md)。
 
 运行配置选择Python模块`deta_generator`，解释器选择安装本包的Conda环境，工作目录设为项目根目录。环境变量`LUMERICAL_LUMAPI_PATH`指向本机`lumapi.py`；例如用户v251安装路径为`E:\Lumerical\ANSYS Inc\v251\Lumerical\api\python\lumapi.py`。参数栏填`init --job-dir jobs/au100_metal --preset au-metal --samples 12 --threads 32`，之后依次换成`preflight --config jobs/au100_metal/job.json`及`generate --config jobs/au100_metal/job.json --limit 1`。
 

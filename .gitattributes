@@ -6,3 +6,4 @@
 *.csv -text
 *.yml -text
 *.whl binary
+src/deta_generator/assets/scripts/*.ps1 text eol=lf

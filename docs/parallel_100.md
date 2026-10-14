@@ -1,6 +1,6 @@
 # 100样本并行采集与模型验证
 
-使用已安装的`deta-generator 0.1.2`和新增的`scripts/run-parallel.ps1`。脚本调用已有的分片生成与校验合并入口，没有更改电磁求解、材料、网格或数据指纹代码，不需要重新安装Python包。
+`deta-generator 0.1.3`把Windows控制器封装进Python包，可像原来的au8nm一样在PyCharm中点击运行。求解、材料、网格与数据指纹实现沿用0.1.2，三份物理源文件SHA256完全相同。包版本升级为0.1.3，数据物理实现标识仍为`deta-generator/0.1.2`，已有对应任务可续算。旧0.1.2用户需安装一次新版才能使用`parallel`入口；独立`scripts/run-parallel.ps1`仍可调用0.1.2。
 
 单条`generate`内部逐个求解。新增脚本同时启动多个独立Python生成器，每一路的单次求解仍采用`processes=1`，默认每路16线程。四路共64线程；`--processes`是单结构求解的MPI进程数，不代表同时生成多少个结构。
 
@@ -12,7 +12,25 @@
 - 四片，每片25个ID：0/4/8…、1/5/9…、2/6/10…、3/7/11…。所有分片读取同一个job.json，输出分别为shard0…shard3。
 - 版本、材料拟合、几何、状态及校验值由生成器在续算/合并时检查。12样本任务和100样本任务指纹不同，不直接混合旧文件。
 
-## Windows / PyCharm终端
+## PyCharm点击运行（推荐）
+
+1. 安装仓库`artifacts/deta_generator-0.1.3-py3-none-any.whl`，确认版本为0.1.3。
+2. 复制原来的au8nm Python运行配置，名称改为`Au8nm_100并行`，模块保持`deta_generator`。
+3. 解释器保持`E:\anaconda3\envs\fdtd_gen\python.exe`；工作目录保持`E:\CypherzZ\PythonProject\Deta_Generator-main\Deta_Generator-main`。
+4. 环境变量保持`LUMERICAL_LUMAPI_PATH=E:\Lumerical\ANSYS Inc\v251\Lumerical\api\python\lumapi.py`。取消两个添加内容根/源根到PYTHONPATH的勾选，避免旧源码覆盖已安装版本。
+5. 参数栏填以下一行，点击运行：
+
+```text
+parallel --job-dir jobs/au100_metal8_100 --samples 100 --workers 4 --concurrency 4 --threads 16
+```
+
+首次运行自动准备100样本计划、完成首结构原生预检，再启动四片。运行窗口每30秒显示总体成功/运行/失败/待运行数量，并给出分片日志路径；求解器时间步百分比仍写入各片原生日志。预检或准备失败时不会启动分片，需先解决控制台错误。再次运行会校验并跳过已有合格样本。
+
+只查看状态时，复制该配置，在参数末尾添加`--parallel-action status`；只准备计划而暂不求解则添加`--parallel-action prepare`。同一入口可用`--parallel-action run`跳过重复预检，或`--parallel-action merge`单独合并。各动作保持同一个job-dir、samples和workers。
+
+PyCharm停止按钮不保证终止后台求解子进程。控制器保存PID，发现上次子生成器仍运行会拒绝重复启动；需要查看进度时使用status配置。
+
+## Windows / PyCharm终端（保留入口）
 
 在项目根目录的PowerShell终端中，先激活`fdtd_gen`。下载新脚本时可直接从仓库下载该单个文件，不需要Git。
 
@@ -26,7 +44,7 @@ python -m deta_generator preflight --config jobs/au100_metal8_100/job.json
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -Command run -Python python -Workers 4 -Concurrency 4 -Threads 16
 ```
 
-不用创建四个PyCharm运行配置。终端中的监控脚本每30秒汇报实际成功/运行/失败/待运行数量，统计时仅计入各分片所属ID，不把其他75个未分配ID当成本片遗漏。
+不用创建四个PyCharm运行配置。监控脚本每30秒汇报实际成功/运行/失败/待运行数量，统计时仅计入各分片所属ID，不把其他75个未分配ID当成本片遗漏。
 
 在另一个终端可查看总体状态：
 
@@ -40,6 +58,8 @@ Get-Content .\jobs\au100_metal8_100\parallel_logs\shard0.stdout.log -Tail 20 -Wa
 同时运行多个原生会话需要机器上的许可实际允许相应并发；预检不证明并发许可可用。若四路中出现许可不足，其他成功样本保留，脚本拒绝宣布100样本完成。解决问题后重跑同一命令会跳过完整、合格样本。
 
 如果机器许可只支持两路，可保留四分片方案，改为分两轮，每路32线程：
+
+PyCharm参数改为`parallel --job-dir jobs/au100_metal8_100 --samples 100 --workers 4 --concurrency 2 --threads 32`；终端入口如下：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -Command run -Python python -Workers 4 -Concurrency 2 -Threads 32

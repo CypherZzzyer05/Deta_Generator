@@ -11,6 +11,7 @@ param(
     [ValidateRange(1,10000)][int]$PackEvery = 10
 )
 $ErrorActionPreference = 'Stop'
+$OutputEncoding = [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 $jobRoot = [System.IO.Path]::GetFullPath($JobDir)
 $configPath = Join-Path $jobRoot 'job.json'
 $layoutPath = Join-Path $jobRoot 'parallel_plan.json'
@@ -26,6 +27,7 @@ if ($Command -eq 'run' -and $Concurrency * $Threads -gt $pythonInfo.cpus) {
 }
 
 function Invoke-Generator([string[]]$GeneratorArgs) {
+    if ($Lumapi -and $GeneratorArgs -notcontains '--lumapi') { $GeneratorArgs += @('--lumapi',$Lumapi) }
     & $pythonExe -m deta_generator @GeneratorArgs
     if ($LASTEXITCODE -ne 0) { throw "Generator failed: $($GeneratorArgs -join ' ')" }
 }
@@ -127,6 +129,7 @@ try {
             $workerArgs = @('-m','deta_generator','generate','--config',$configPath,'--processes','1','--threads',"$Threads",
                 '--shard-count',"$Workers",'--shard-index',"$nextIndex",'--output',(Join-Path $jobRoot "shard$nextIndex"),
                 '--pack-every',"$PackEvery",'--fail-fast')
+            if ($Lumapi) { $workerArgs += @('--lumapi',$Lumapi) }
             $argumentLine = ($workerArgs | ForEach-Object { Quote-WindowsArgument $_ }) -join ' '
             $stdout = Join-Path $jobRoot "parallel_logs\shard$nextIndex.stdout.log"
             $stderr = Join-Path $jobRoot "parallel_logs\shard$nextIndex.stderr.log"

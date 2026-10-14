@@ -66,6 +66,8 @@ Au预设为As₂Se₃ / 350 nm SiO₂ / **100 nm Au** / 空气，法向x偏振�
 
 强机器可先提高单个FDTD任务的线程数；要多任务并行时，按下面方式给不同任务独立输出目录。每个任务占用独立许可和内存，线程总数与峰值内存由使用者按机器资源配置。不要让多个任务写入同一输出目录。
 
+**100样本自动启动入口：** 新增Windows脚本`scripts/run-parallel.ps1`，默认四片、最多四路并发、每路16线程，成功后自动校验合并；支持两路排队执行四片、总体进度和失败续算。它调用已安装的0.1.2包，不改变求解代码或网格设置。操作和实测时间估算见[100样本并行说明](docs/parallel_100.md)。
+
 ```powershell
 # 两条命令在不同终端/机器执行，使用同一job.json与同一版本的包。
 python -m deta_generator generate --config jobs/au100_metal/job.json --shard-count 2 --shard-index 0 --output jobs/au100_metal/shard0 --threads 16

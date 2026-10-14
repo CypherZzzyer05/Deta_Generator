@@ -4,8 +4,9 @@ param(
     [string]$Python = 'python',
     [string]$Config = '.\jobs\as2se3\job.json',
     [string]$JobDir = '.\jobs\as2se3',
-    [ValidateSet('au-4','au-8','ag-4','ag-8','bare-4','bare-8')]
-    [string]$Preset = 'au-4',
+    [ValidateSet('au-metal','ag-metal','bare-metal','au-4','au-8','ag-4','ag-8','bare-4','bare-8')]
+    [string]$Preset = 'au-metal',
+    [double]$MetalMeshNm = 2.5,
     [int]$Samples = 12,
     [int]$Threads = 8,
     [string]$Lumapi = '',
@@ -20,6 +21,7 @@ $ErrorActionPreference = 'Stop'
 $generatorArgs = @('-m','deta_generator',$Command)
 if ($Command -eq 'init') {
     $generatorArgs += @('--job-dir',$JobDir,'--preset',$Preset,'--samples',"$Samples",'--threads',"$Threads")
+    if ($Preset -like '*-metal') { $generatorArgs += @('--metal-mesh-nm',"$MetalMeshNm") }
 } else {
     $generatorArgs += @('--config',$Config,'--threads',"$Threads")
 }

@@ -6,7 +6,7 @@
 
 ## 在计算机上运行
 
-**2026-10-14更新：Au厚度改为100 nm（包版本0.1.1）。** 更新包不会修改已有的`job.json`；旧150 nm任务保留原设置。请用下方新目录`jobs/au100_4`重新执行`init`。厚度进入物理指纹，100/150 nm数据禁止续算或合并混用。0.1.0 wheel保留供历史任务复现。
+**2026-10-14更新：默认采用仅金属层加密（包版本0.1.2），Au厚度仍为100 nm。** 按用户实战设置，撤掉全域和四聚体附近的覆盖网格，其他区域使用Lumerical自动网格。更新包不会修改已有的`job.json`；请用新目录`jobs/au100_metal`创建任务。网格模式和代码进入物理指纹，新旧数据禁止续算或合并混用。历史任务继续使用对应0.1.0/0.1.1 wheel。
 
 使用Lumerical版本兼容的Python环境；本机实际连接验证使用Python3.10、Lumerical2024 R1。必须有可用FDTD求解许可，包不包含Lumerical软件、许可或凭据。
 
@@ -16,33 +16,45 @@ cd Deta_Generator
 python -m pip install --upgrade .
 
 # 先创建任务。12只是流程验证样本量，正式训练需按研究目标扩大。
-python -m deta_generator init --job-dir jobs/au100_4 --preset au-4 --samples 12 --threads 16
+python -m deta_generator init --job-dir jobs/au100_metal --preset au-metal --samples 12 --threads 32
 # 指向新计算机的安装路径；以下路径是示例，请改成实际版本与目录。
 $env:LUMERICAL_LUMAPI_PATH = 'C:\Program Files\Lumerical\v241\api\python\lumapi.py'
-python -m deta_generator doctor --config jobs/au100_4/job.json
-python -m deta_generator preflight --config jobs/au100_4/job.json
-python -m deta_generator plan --config jobs/au100_4/job.json
+python -m deta_generator doctor --config jobs/au100_metal/job.json
+python -m deta_generator preflight --config jobs/au100_metal/job.json
+python -m deta_generator plan --config jobs/au100_metal/job.json
 # 先算一个样本，核对资源、耗时、材料和光谱，然后去掉limit采集完整计划。
-python -m deta_generator generate --config jobs/au100_4/job.json --limit 1
-python -m deta_generator generate --config jobs/au100_4/job.json
-python -m deta_generator status --config jobs/au100_4/job.json
+python -m deta_generator generate --config jobs/au100_metal/job.json --limit 1
+python -m deta_generator generate --config jobs/au100_metal/job.json
+python -m deta_generator status --config jobs/au100_metal/job.json
 ```
 
-只需安装包时，也可下载仓库 `artifacts/deta_generator-0.1.1-py3-none-any.whl`，运行 `python -m pip install <wheel文件路径>`。wheel内已带默认配置和As₂Se₃材料文件。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
+没有Git时可下载仓库ZIP，解压后在包含`pyproject.toml`的目录执行`python -m pip install --upgrade .`。也可下载仓库 `artifacts/deta_generator-0.1.2-py3-none-any.whl`，运行 `python -m pip install --upgrade <wheel文件路径>`。wheel内已带默认配置和As₂Se₃材料文件。安装依赖只有NumPy与psutil；使用前仍需本机原生Lumerical API和求解许可。
 
 也可使用安装后的 `deta-generator` 命令，或Windows脚本：
 
 ```powershell
-.\scripts\run-windows.ps1 -Command generate -Config jobs/au100_4/job.json -Threads 16 -Limit 1
+.\scripts\run-windows.ps1 -Command generate -Config jobs/au100_metal/job.json -Threads 32 -Limit 1
 ```
 
 `doctor`检查API连接、版本和实际材料拟合；`preflight`另外构造首个计划结构，读取实际网格和原生内存估计，**二者均不运行电磁求解**。它们不证明求解许可、光谱收敛或设备精度。生成时每个结构都重新做网格与内存检查；内存不足则拒绝启动该样本。原生内存建议是近似值，尤其共形网格仍需实际试算。
 
 ## 网格、镀层和计算成本
 
-预设有 `au-4`、`au-8`、`ag-4`、`ag-8`、`bare-4`、`bare-8`。4 nm预设为默认；全域每个实际x/y/z网格单元必须严格小于10 nm，金属区域z网格2.5 nm。8 nm用于探索，需要针对目标结构与更细网格复核；当前研究候选第一反射谷8→4 nm变化约4.10个百分点，超过既定3个百分点标准，不能直接认定8 nm足够精确。
+默认预设为`au-metal`，另有`ag-metal`、`bare-metal`。`mesh_policy="metal_only"`模式只创建`metal_mesh`，只覆盖金属层及上下各一个金属网格步长的界面邻域，默认z网格2.5 nm；x/y不强制覆盖。其他区域使用Lumerical自动网格，`mesh_accuracy=4`。不创建`global_mesh_limit`或`structure_mesh`，`maximum_mesh_nm=null`。旧配置中的`mesh_nm`不参与该模式的覆盖网格构造。
 
-版本0.1.1的新Au预设为As₂Se₃ / 350 nm SiO₂ / **100 nm Au** / 空气，法向x偏振，700–1700 nm；Ag预设仍显式使用150 nm。Au厚度是固定物理设置，七个几何自由度不变。`bare`以100 nm Au布局作为参考，使用 `remove_metal=true`，仅移除金属物体，保留有限基板、源、监测器、下方空气域及金属区网格，并要求移除前后网格一致。**不能用 `metal_material=null` 替代这个受控不镀金结构。** 当前有限薄基板不代表毫米厚实物基片。
+需要金属层8 nm时在新任务初始化时显式设置：
+
+```powershell
+python -m deta_generator init --job-dir jobs/au100_metal8 --preset au-metal --metal-mesh-nm 8 --samples 12 --threads 32
+```
+
+金属层请求步长必须严格小于10 nm；其实际z单元（包括跨金属界面的单元）逐个复查。所有实际x/y/z坐标仍保存并在续算/合并时复查，但自动网格区域允许超过10 nm，报告不会把这种数据宣称为全域小于10 nm。网格策略来自用户2026-10-14的实战要求；加速幅度和光谱误差需在目标机器试算确认。
+
+显式历史预设`au-4`、`au-8`、`ag-4`、`ag-8`、`bare-4`、`bare-8`保留原全域和结构覆盖网格，仅供有意选择该策略的新任务使用。它们不是新版默认模式。此前全域8→4 nm的精度结果不能代替仅金属加密模式的收敛验证。
+
+Au预设为As₂Se₃ / 350 nm SiO₂ / **100 nm Au** / 空气，法向x偏振，700–1700 nm；Ag预设仍显式使用150 nm。Au厚度是固定物理设置，七个几何自由度不变。`bare`以100 nm Au布局作为参考，使用 `remove_metal=true`，仅移除金属物体，保留有限基板、源、监测器、下方空气域及参考金属区网格，并要求移除前后网格一致。**不能用 `metal_material=null` 替代这个受控不镀金结构。** 当前有限薄基板不代表毫米厚实物基片。
+
+`bare-metal`是配对对照：先生成Au参考布局的自动网格，再把参考x/y步长写入现有`metal_mesh`物体后删除金属，避免因删除材料造成x/y网格变粗。它仍只保留一个金属区域网格物体，逐轴验证移除前后网格相同；不另加全域或四聚体网格。Au/Ag自身的x/y始终不加覆盖。参考x/y不是均匀网格或删除后坐标仍改变时，该对照会拒绝运行。
 
 每个训练样本输出1000个均匀波长点的R/T/A。1000是每条光谱的点数，`--samples`才是不同几何结构数量。为控制数据集成本，这个包默认只记录远场光谱；当前本机金层/网格研究的两平面E/H分析与报告仍在独立研究项目中进行。
 
@@ -56,10 +68,10 @@ python -m deta_generator status --config jobs/au100_4/job.json
 
 ```powershell
 # 两条命令在不同终端/机器执行，使用同一job.json与同一版本的包。
-python -m deta_generator generate --config jobs/au100_4/job.json --shard-count 2 --shard-index 0 --output jobs/au100_4/shard0 --threads 16
-python -m deta_generator generate --config jobs/au100_4/job.json --shard-count 2 --shard-index 1 --output jobs/au100_4/shard1 --threads 16
+python -m deta_generator generate --config jobs/au100_metal/job.json --shard-count 2 --shard-index 0 --output jobs/au100_metal/shard0 --threads 16
+python -m deta_generator generate --config jobs/au100_metal/job.json --shard-count 2 --shard-index 1 --output jobs/au100_metal/shard1 --threads 16
 # 两个任务结束后，把分片目录复制到同一机器并合并。
-python -m deta_generator merge --config jobs/au100_4/job.json --shards jobs/au100_4/shard0 jobs/au100_4/shard1 --output jobs/au100_4/merged
+python -m deta_generator merge --config jobs/au100_metal/job.json --shards jobs/au100_metal/shard0 jobs/au100_metal/shard1 --output jobs/au100_metal/merged
 ```
 
 合并验证配置、采样计划、划分、校验值、实际网格、求解状态、版本及拟合；冲突的重复ID拒绝合并。合并不会删除分片。一个任务的 `plan`已固定采样几何；多机器首次建立计划时需使用相同NumPy版本以确保采样序列一致，合并时仍逐项核对实际几何。
@@ -73,6 +85,18 @@ python -m deta_generator merge --config jobs/au100_4/job.json --shards jobs/au10
 - `summary.json`、`generation.log`、`errors.jsonl`：完成数量、日志与失败原因。
 
 光谱保留入射功率归一化R，不做逐条min-max缩放、不裁剪不合理结果。未达到自动关断时最多四次延长时间；不合格样本排除在训练数据之外。可用 `pack`再次校验和打包已有成功数据，全程不调用求解器。
+
+## PyCharm与运行进度
+
+运行配置选择Python模块`deta_generator`，解释器选择安装本包的Conda环境，工作目录设为项目根目录。环境变量`LUMERICAL_LUMAPI_PATH`指向本机`lumapi.py`；例如用户v251安装路径为`E:\Lumerical\ANSYS Inc\v251\Lumerical\api\python\lumapi.py`。参数栏填`init --job-dir jobs/au100_metal --preset au-metal --samples 12 --threads 32`，之后依次换成`preflight --config jobs/au100_metal/job.json`及`generate --config jobs/au100_metal/job.json --limit 1`。
+
+控制台记录样本开始/完成及重试；当前求解器内部进度通过原生日志查看，在PyCharm PowerShell终端执行：
+
+```powershell
+Get-Content ".\jobs\au100_metal\data\projects\sample_000000_p0.log" -Tail 20 -Wait
+```
+
+`job.json`中`hide_fdtd=false`可在下次启动时显示FDTD界面。进度百分比对应当前仿真时间上限；达到自动关断可以提前结束。更新安装不改变已经运行中的Python进程，应等当前试算结束或自行停止后再安装新版，不要在旧任务目录中切换网格模式。
 
 ## 材料与验证范围
 

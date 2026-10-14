@@ -124,6 +124,7 @@ class SimulationSettings:
     material_imaginary_weight: float = 1.0
     research_grid: bool = False
     maximum_mesh_nm: float | None = None
+    mesh_policy: str = "legacy"
     monitor_downsample_xy: int = 1
     power_validation_wavelengths_nm: tuple = ()
     research_wavelengths_nm: tuple = ()
@@ -171,6 +172,13 @@ class SimulationSettings:
                 raise ValueError('Formal near-IR maximum mesh must be strictly below 10 nm')
             if self.mesh_nm > self.maximum_mesh_nm or self.metal_mesh_nm > self.maximum_mesh_nm:
                 raise ValueError('Local mesh steps must not exceed the maximum mesh')
+        if self.mesh_policy not in ('legacy', 'metal_only'):
+            raise ValueError('mesh_policy must be legacy or metal_only')
+        if self.mesh_policy == 'metal_only':
+            if self.maximum_mesh_nm is not None:
+                raise ValueError('metal_only cannot enforce a whole-domain mesh limit')
+            if self.metal_material is None or not 0 < self.metal_mesh_nm < 10:
+                raise ValueError('metal_only requires a reference metal and a metal z mesh below 10 nm')
         if isinstance(self.monitor_downsample_xy, bool) or not isinstance(self.monitor_downsample_xy, int) or self.monitor_downsample_xy < 1:
             raise ValueError('Monitor spatial sampling factor must be a positive integer')
         if self.monitor_downsample_xy > 1 and not self.power_validation_wavelengths_nm:
@@ -309,14 +317,14 @@ class PipelineConfig:
         # Preserve fingerprints for untouched legacy configurations.
         for key in ("resonator_material", "resonator_nk_csv", "material_max_extension_nm",
                     "metal_material", "metal_thickness_nm", "metal_mesh_nm", "bottom_padding_nm", "polarization_deg",
-                    "material_fit_tolerance", "material_imaginary_weight", "research_grid", "maximum_mesh_nm",
+                    "material_fit_tolerance", "material_imaginary_weight", "research_grid", "maximum_mesh_nm", "mesh_policy",
                     "monitor_downsample_xy", "power_validation_wavelengths_nm", "research_wavelengths_nm"):
             if getattr(self.simulation, key) == SimulationSettings.__dataclass_fields__[key].default:
                 data["simulation"].pop(key)
         if self.simulation.resonator_nk_csv:
             data["resonator_nk_sha256"] = hashlib.sha256(Path(self.simulation.resonator_nk_csv).read_bytes()).hexdigest()
             data['simulation']['resonator_nk_csv'] = 'content-addressed:resonator_nk_sha256'
-        data['generator'] = 'deta-generator/0.1.0'
+        data['generator'] = 'deta-generator/0.1.2'
         data['implementation_sha256'] = {name: hashlib.sha256(
             (Path(__file__).parent/name).read_text(encoding='utf-8').replace('\r\n', '\n').encode()).hexdigest()
             for name in ('config.py', 'lumerical.py', 'pipeline.py')}

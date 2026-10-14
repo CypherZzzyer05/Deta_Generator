@@ -19,8 +19,8 @@ from .config import Geometry, SimulationSettings
 LOG = logging.getLogger(__name__)
 
 
-def mesh_grid_summary(grids, maximum_nm):
-    """Check solver-generated coordinates, including every returned grid cell."""
+def mesh_grid_summary(grids, maximum_nm=None):
+    """Record every returned grid cell; enforce a global limit only when requested."""
     summary = {}
     for axis in ('x', 'y', 'z'):
         positions = np.asarray(grids[axis], dtype=float).reshape(-1)
@@ -28,11 +28,37 @@ def mesh_grid_summary(grids, maximum_nm):
         if len(steps_nm) < 1 or not np.isfinite(positions).all() or np.any(steps_nm <= 0):
             raise ValueError(f'Invalid solver-generated {axis} mesh')
         largest = float(steps_nm.max())
-        if largest > maximum_nm + 1e-6 or largest >= 10:
+        if maximum_nm is not None and (largest > maximum_nm + 1e-6 or largest >= 10):
             raise ValueError(f'Actual {axis} mesh exceeds the strict limit: {largest:.9f} nm')
         summary[axis] = {'points': len(positions), 'maximum_step_nm': largest,
                          'minimum_step_nm': float(steps_nm.min())}
     return summary
+
+
+def mesh_audit(grids, settings):
+    """Validate actual metal z cells without limiting the automatic mesh elsewhere."""
+    summary = mesh_grid_summary(grids, settings.maximum_mesh_nm)
+    audit = {'mesh_policy': settings.mesh_policy,
+             'maximum_mesh_nm': settings.maximum_mesh_nm,
+             'whole_domain_limit_enforced': settings.maximum_mesh_nm is not None,
+             'actual_grid': summary,
+             'all_returned_cells_below_10_nm': all(v['maximum_step_nm'] < 10 for v in summary.values())}
+    if settings.mesh_policy == 'metal_only':
+        z = np.asarray(grids['z'], dtype=float).reshape(-1)*1e9
+        bottom = -settings.substrate_depth_nm-settings.metal_thickness_nm
+        top = -settings.substrate_depth_nm
+        if z[0] > bottom+1e-6 or z[-1] < top-1e-6:
+            raise ValueError('Actual mesh does not cover the reference metal layer')
+        mask = (z[:-1] < top-1e-6) & (z[1:] > bottom+1e-6)
+        steps = np.diff(z)[mask]
+        if not len(steps) or steps.max() > settings.metal_mesh_nm+1e-6 or steps.max() >= 10:
+            raise ValueError('Actual metal z mesh exceeds the requested limit')
+        audit['metal_region'] = {'axis': 'z', 'z_min_nm': bottom, 'z_max_nm': top,
+                                 'cells': len(steps), 'requested_step_nm': settings.metal_mesh_nm,
+                                 'maximum_step_nm': float(steps.max()), 'minimum_step_nm': float(steps.min()),
+                                 'reference_mesh_without_metal': settings.remove_metal,
+                                 'reference_xy_pinned': settings.remove_metal}
+    return audit
 
 
 def validate_power_integration(wavelength, reflection, transmission, check_wavelength, check_r, check_t):
@@ -271,9 +297,10 @@ class FDTDSimulator:
                     f.set("first axis", "z")
                     f.set("rotation 1", -float(angle))
         # 在结构及其上下邻近区域设置局部网格，控制几何和共振的离散精度。
-        f.addmesh(name="structure_mesh", x=0., y=0., x_span=p, y_span=p,
-                  z_min=-s.mesh_nm*nm, z_max=h + s.mesh_nm*nm,
-                  dx=s.mesh_nm*nm, dy=s.mesh_nm*nm, dz=s.mesh_nm*nm)
+        if s.mesh_policy != 'metal_only':
+            f.addmesh(name="structure_mesh", x=0., y=0., x_span=p, y_span=p,
+                      z_min=-s.mesh_nm*nm, z_max=h + s.mesh_nm*nm,
+                      dx=s.mesh_nm*nm, dy=s.mesh_nm*nm, dz=s.mesh_nm*nm)
         # 平面波由空气侧沿 -z 垂直入射，偏振角 0 对应本模型的 x 偏振。
         f.addplane(properties=OrderedDict([
             ("name", "source"), ("injection axis", "z"), ("direction", "Backward"),
@@ -316,6 +343,15 @@ class FDTDSimulator:
 
         if s.remove_metal and metal_enabled:
             reference = {a: np.asarray(f.getresult('FDTD', a)).reshape(-1) for a in ('x', 'y', 'z')}
+            if s.mesh_policy == 'metal_only':
+                # Removal coarsens automatic x/y meshes. Pin those same steps
+                # using the existing metal-region override, keeping one object.
+                for axis in ('x', 'y'):
+                    steps = np.diff(reference[axis])
+                    if not np.allclose(steps, steps[0], rtol=0, atol=1e-15):
+                        raise ValueError('Bare metal-only control requires uniform reference x/y grids')
+                    f.setnamed('metal_mesh', f'override {axis} mesh', True)
+                    f.setnamed('metal_mesh', 'd'+axis, float(steps.max()))
             f.select('back_metal')
             f.delete()
             actual = {a: np.asarray(f.getresult('FDTD', a)).reshape(-1) for a in reference}
@@ -346,6 +382,19 @@ class FDTDSimulator:
         near('R', 'z', geometry.h+0.75*s.air_padding_nm)
         near('FDTD', 'z max', geometry.h+s.air_padding_nm)
         near('FDTD', 'index', s.background_index, 1)
+        if s.mesh_policy == 'metal_only':
+            if any(int(f.getnamednumber(name)) for name in ('global_mesh_limit', 'structure_mesh')):
+                raise ValueError('metal_only layout contains a global or pillar mesh override')
+            if int(f.getnamednumber('metal_mesh')) != 1:
+                raise ValueError('metal_only layout requires exactly one metal mesh override')
+            for key, expected in (('z min', -s.substrate_depth_nm-s.metal_thickness_nm-s.metal_mesh_nm),
+                                  ('z max', -s.substrate_depth_nm+s.metal_mesh_nm), ('dz', s.metal_mesh_nm)):
+                near('metal_mesh', key, expected)
+            for axis in ('x', 'y'):
+                if bool(f.getnamed('metal_mesh', f'override {axis} mesh')) != s.remove_metal:
+                    raise ValueError('Metal x/y override disagrees with the reference-control policy')
+            if not bool(f.getnamed('metal_mesh', 'override z mesh')):
+                raise ValueError('Metal z override is disabled')
         near('source', 'wavelength start', s.wavelength_start_nm)
         near('source', 'wavelength stop', s.wavelength_stop_nm)
         if f.getnamed('source', 'direction') != 'Backward' or f.getnamed('source', 'injection axis') not in ('z', 'z-axis'):
@@ -379,7 +428,7 @@ class FDTDSimulator:
                     raise ValueError('Native back-metal material mismatch')
 
     def run(self, geometry, project_path, include_silicon=True, substrate_index=None):
-        if geometry.theta_odd_deg is not None and (self.settings.maximum_mesh_nm is None
+        if geometry.theta_odd_deg is not None and self.settings.mesh_policy != 'metal_only' and (self.settings.maximum_mesh_nm is None
                 or not 0 < self.settings.maximum_mesh_nm < 10):
             raise ValueError('Real seven-parameter simulations require a whole-domain maximum mesh strictly below 10 nm; use the fine8 configuration or a finer research mesh')
         self.build(geometry, include_silicon, substrate_index)
@@ -403,17 +452,16 @@ class FDTDSimulator:
                               f'{float(recommended)/2**30:.2f} GiB; reduce simultaneous jobs or use more RAM')
         mesh_grids = {}
         mesh_summary = None
-        if self.settings.maximum_mesh_nm is not None:
+        if self.settings.maximum_mesh_nm is not None or self.settings.mesh_policy == 'metal_only':
             mesh_grids = {axis: np.asarray(self.fdtd.getresult('FDTD', axis)).reshape(-1)
                           for axis in ('x', 'y', 'z')}
-            mesh_summary = mesh_grid_summary(mesh_grids, self.settings.maximum_mesh_nm)
-            if self.settings.monitor_downsample_xy > 1:
+            audit = mesh_audit(mesh_grids, self.settings)
+            mesh_summary = audit['actual_grid']
+            if self.settings.maximum_mesh_nm is not None and self.settings.monitor_downsample_xy > 1:
                 bound = max(mesh_summary[axis]['maximum_step_nm'] for axis in ('x', 'y'))*self.settings.monitor_downsample_xy
                 if bound >= 10:
                     raise ValueError('Monitor recording spacing must also remain strictly below 10 nm')
-            project_path.with_suffix('.mesh.json').write_text(json.dumps({
-                'maximum_mesh_nm': self.settings.maximum_mesh_nm, 'actual_grid': mesh_summary,
-                'all_returned_cells_below_10_nm': True}, indent=2), encoding='utf-8')
+            project_path.with_suffix('.mesh.json').write_text(json.dumps(audit, indent=2), encoding='utf-8')
         attempts = []
         elapsed = 0.0
         # 未自动关断时仅延长时间上限，最多四次；几何、网格与波长设置保持相同。
@@ -460,4 +508,5 @@ class FDTDSimulator:
         if mesh_summary is not None:
             result.update({f'mesh_{axis}_nm': positions * 1e9 for axis, positions in mesh_grids.items()})
             result['mesh_summary_json'] = json.dumps(mesh_summary)
+            result['mesh_audit_json'] = json.dumps(audit)
         return result

@@ -14,7 +14,7 @@ import traceback
 import numpy as np
 
 from .config import Geometry, PARAMETER_NAMES
-from .lumerical import FDTDSimulator, validate_spectrum, mesh_grid_summary
+from .lumerical import FDTDSimulator, validate_spectrum, mesh_audit
 
 SCHEMA_VERSION = 1
 LOG = logging.getLogger(__name__)
@@ -187,12 +187,11 @@ def load_sample(path, entry, config, fingerprint):
         raise ValueError("Sample labels do not match normalization bounds")
     validate_spectrum(result["wavelength_nm"], result["reflectance"], result["transmittance"],
                       config.simulation, int(result["status"].item()))
-    if config.simulation.maximum_mesh_nm is not None:
+    if config.simulation.maximum_mesh_nm is not None or config.simulation.mesh_policy == 'metal_only':
         keys = [f"mesh_{axis}_nm" for axis in ("x", "y", "z")]
         if any(key not in result for key in keys):
-            raise ValueError("Strict-mesh samples require saved actual mesh coordinates")
-        mesh_grid_summary({axis: result[f"mesh_{axis}_nm"] * 1e-9 for axis in ("x", "y", "z")},
-                          config.simulation.maximum_mesh_nm)
+            raise ValueError("Mesh-audited samples require saved actual mesh coordinates")
+        mesh_audit({axis: result[f"mesh_{axis}_nm"] * 1e-9 for axis in ("x", "y", "z")}, config.simulation)
     return result
 
 

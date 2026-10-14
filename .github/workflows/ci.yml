@@ -19,3 +19,5 @@ jobs:
       - run: python -m pip wheel --no-deps . --wheel-dir dist
       - run: python -m deta_generator init --job-dir tmp/ci-job --preset bare-4 --samples 4
       - run: python -m deta_generator plan --config tmp/ci-job/job.json
+      - run: python -m deta_generator init --job-dir tmp/ci-metal --preset au-metal --samples 4
+      - run: python -m deta_generator plan --config tmp/ci-metal/job.json

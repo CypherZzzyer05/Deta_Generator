@@ -9,14 +9,14 @@ import sys
 import numpy as np
 import psutil
 from .config import load_config
-from .lumerical import FDTDSimulator, locate_lumapi, mesh_grid_summary
+from .lumerical import FDTDSimulator, locate_lumapi, mesh_audit
 from .pipeline import atomic_json, directory_lock, prepare_manifest, generate_dataset, pack_dataset
 from .merge import merge_shards
 
 ASSETS = Path(__file__).parent/'assets'
 
 
-def initialize(directory, preset, samples, threads, lumapi):
+def initialize(directory, preset, samples, threads, lumapi, metal_mesh_nm=None):
     directory = Path(directory).resolve()
     config_path = directory/'job.json'
     if config_path.exists() or (directory.exists() and any(directory.iterdir())):
@@ -25,10 +25,20 @@ def initialize(directory, preset, samples, threads, lumapi):
     source = ASSETS/'configs'/f'as2se3_{"au" if metal == "bare" else metal}_fine8.json'
     data = json.loads(source.read_text(encoding='utf-8'))
     data.update(lumapi_path=lumapi, output_dir='data', sample_count=samples)
-    data['simulation'].update(mesh_nm=float(mesh), maximum_mesh_nm=float(mesh), threads=threads,
-                              remove_metal=metal == 'bare')
+    if mesh == 'metal':
+        data['simulation'].update(mesh_policy='metal_only', maximum_mesh_nm=None)
+        if metal_mesh_nm is not None:
+            data['simulation']['metal_mesh_nm'] = metal_mesh_nm
+    else:
+        if metal_mesh_nm is not None:
+            raise ValueError('--metal-mesh-nm requires an au-metal, ag-metal or bare-metal preset')
+        data['simulation'].update(mesh_nm=float(mesh), maximum_mesh_nm=float(mesh))
+    data['simulation'].update(threads=threads, remove_metal=metal == 'bare')
     data['simulation']['resonator_nk_csv'] = 'materials/as2se3_joseph_700nm.csv'
     data['quality_level'] = 'pipeline_validation'
+    # Reject invalid metal steps before creating any task files.
+    from .config import SimulationSettings
+    SimulationSettings(**data['simulation'])
     directory.mkdir(parents=True, exist_ok=True)
     materials = directory/'materials'
     materials.mkdir()
@@ -36,15 +46,18 @@ def initialize(directory, preset, samples, threads, lumapi):
         shutil.copyfile(ASSETS/'materials'/name, materials/name)
     atomic_json(config_path, data)
     load_config(config_path)
-    return {'config': str(config_path), 'samples': samples, 'mesh_nm': float(mesh)}
+    return {'config': str(config_path), 'samples': samples,
+            'mesh_policy': data['simulation'].get('mesh_policy', 'legacy'),
+            'mesh_nm': None if mesh == 'metal' else float(mesh),
+            'metal_mesh_nm': data['simulation']['metal_mesh_nm']}
 
 
 def configured(args):
     config = load_config(args.config)
     if config.quadrant_rotation_bounds_deg is None or config.simulation.research_grid:
         raise ValueError('This package generates seven-parameter, 1000-point Metaformer datasets')
-    if config.simulation.maximum_mesh_nm is None or not config.simulation.require_auto_shutoff:
-        raise ValueError('Strict whole-domain mesh and automatic shutoff are required')
+    if (config.simulation.maximum_mesh_nm is None and config.simulation.mesh_policy != 'metal_only') or not config.simulation.require_auto_shutoff:
+        raise ValueError('Use an audited whole-domain or metal-only mesh and automatic shutoff')
     if config.simulation.metal_material is None:
         raise ValueError('Use a bare preset to preserve the finite reference stack')
     settings = config.simulation
@@ -74,7 +87,8 @@ def native_check(config, preflight=False):
             simulator.build(geometry)
             report['native_layout_verified'] = True
             grids = {a: np.asarray(simulator.fdtd.getresult('FDTD', a)).reshape(-1) for a in ('x', 'y', 'z')}
-            report['actual_mesh'] = mesh_grid_summary(grids, config.simulation.maximum_mesh_nm)
+            report['mesh_audit'] = mesh_audit(grids, config.simulation)
+            report['actual_mesh'] = report['mesh_audit']['actual_grid']
             resources = simulator.fdtd.runsystemcheck()
             recommended = resources.get('Memory_Recommended_Bytes', resources.get('Memory_Recommended'))
             if recommended is None or not np.isfinite(float(recommended)) or float(recommended) <= 0:
@@ -96,7 +110,8 @@ def main(argv=None):
     parser.add_argument('command', choices=('init', 'doctor', 'preflight', 'plan', 'generate', 'pack', 'merge', 'status'))
     parser.add_argument('--config', type=Path, default=Path('job.json'))
     parser.add_argument('--job-dir', type=Path, default=Path('jobs/as2se3'))
-    parser.add_argument('--preset', choices=('au-4', 'au-8', 'ag-4', 'ag-8', 'bare-4', 'bare-8'), default='au-4')
+    parser.add_argument('--preset', choices=('au-metal', 'ag-metal', 'bare-metal', 'au-4', 'au-8', 'ag-4', 'ag-8', 'bare-4', 'bare-8'), default='au-metal')
+    parser.add_argument('--metal-mesh-nm', type=float, help='Metal z step for init with a *-metal preset (default: 2.5 nm)')
     parser.add_argument('--samples', type=int, default=12)
     parser.add_argument('--threads', type=int)
     parser.add_argument('--processes', type=int)
@@ -111,13 +126,15 @@ def main(argv=None):
     args = parser.parse_args(argv)
     logging.basicConfig(level=logging.INFO, stream=sys.stdout, format='%(asctime)s %(levelname)s %(message)s')
     try:
+        if args.metal_mesh_nm is not None and args.command != 'init':
+            raise ValueError('--metal-mesh-nm is an init option; use a new task when changing the mesh')
         if args.command == 'init':
             if args.samples < 1:
                 raise ValueError('samples must be positive')
             if args.threads is not None and args.threads < 1:
                 raise ValueError('threads must be positive')
             result = initialize(args.job_dir, args.preset, args.samples,
-                                args.threads if args.threads is not None else 8, args.lumapi)
+                                args.threads if args.threads is not None else 8, args.lumapi, args.metal_mesh_nm)
         else:
             config = configured(args)
             if args.shard_count < 1 or not 0 <= args.shard_index < args.shard_count:

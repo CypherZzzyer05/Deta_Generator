@@ -1,0 +1,117 @@
+{
+  "package_version": "0.1.4",
+  "software_tests": 76,
+  "test_log": "tmp/final_unittest_20261016.log",
+  "test_simulator_concurrent_sample_runs_verified": [
+    4,
+    10
+  ],
+  "test_simulator_native_engines_observed": 0,
+  "target_server_native_ten_job_performance_verified": false,
+  "source_material_and_mesh_unchanged": true,
+  "physical_core_identical_to_version": "0.1.2",
+  "package_file_count": 17,
+  "installed_wheel_new_1000_sample_plan_shards": 40,
+  "installed_wheel_readonly_status_verified": true,
+  "existing_100_sample_plan_bytes_unchanged": true,
+  "native_preflight": {
+    "python": "D:\\projects\\Deta_generator_dev\\tmp\\test-env\\Scripts\\python.exe",
+    "lumapi": "D:\\Program Files\\Lumerical\\v241\\api\\python\\lumapi.py",
+    "fdtd_executable": "D:\\Program Files\\Lumerical\\v241\\bin\\fdtd-solutions.exe",
+    "logical_cpus": 16,
+    "available_ram_gib": 7.0641326904296875,
+    "processes": 1,
+    "threads": 1,
+    "implementation_sha256": {
+      "config.py": "b0888e063c7a9bf6bfbbef747cd99a2817a3b130a8ad65d574868fdaebbceed1",
+      "lumerical.py": "e53b59a59347503c105c24cde90dba5a136a32f38307d620802e0bb5189f33ad",
+      "pipeline.py": "73c41fc576bcbc4580e95c794cfa04aefd492d31f6b8fa9e0a5c48142a82e810"
+    },
+    "solver_run_performed": false,
+    "fdtd_version": "8.31.3633",
+    "native_layout_verified": true,
+    "mesh_audit": {
+      "mesh_policy": "metal_only",
+      "maximum_mesh_nm": null,
+      "whole_domain_limit_enforced": false,
+      "actual_grid": {
+        "x": {
+          "points": 84,
+          "maximum_step_nm": 7.828438646399307,
+          "minimum_step_nm": 7.828438646398883
+        },
+        "y": {
+          "points": 84,
+          "maximum_step_nm": 7.828438646399307,
+          "minimum_step_nm": 7.828438646398883
+        },
+        "z": {
+          "points": 123,
+          "maximum_step_nm": 38.70967741935606,
+          "minimum_step_nm": 7.733333333331656
+        }
+      },
+      "all_returned_cells_below_10_nm": false,
+      "metal_region": {
+        "axis": "z",
+        "z_min_nm": -450,
+        "z_max_nm": -350,
+        "cells": 13,
+        "requested_step_nm": 8.0,
+        "maximum_step_nm": 7.7333333333333485,
+        "minimum_step_nm": 7.7333333333333485,
+        "reference_mesh_without_metal": false,
+        "reference_xy_pinned": false
+      }
+    },
+    "actual_mesh": {
+      "x": {
+        "points": 84,
+        "maximum_step_nm": 7.828438646399307,
+        "minimum_step_nm": 7.828438646398883
+      },
+      "y": {
+        "points": 84,
+        "maximum_step_nm": 7.828438646399307,
+        "minimum_step_nm": 7.828438646398883
+      },
+      "z": {
+        "points": 123,
+        "maximum_step_nm": 38.70967741935606,
+        "minimum_step_nm": 7.733333333331656
+      }
+    },
+    "recommended_ram_gib": 0.987765567498655,
+    "geometry_values": [
+      649.7604076511419,
+      161.1566330153756,
+      284.88377288849,
+      133.54673339593725,
+      116.4992120505661,
+      -33.64481402341028,
+      39.36335222367701
+    ],
+    "material_fit_errors": {
+      "As2Se3 - Joseph 700nm film (2020)": {
+        "max_n_error": 0.0068060458615883945,
+        "max_k_error": 0.0017094041668339333,
+        "max_imaginary_permittivity_error": 0.009892438894474886,
+        "accuracy_certified": false
+      },
+      "SiO2 (Glass) - Palik": {
+        "max_n_error": 0.008349388224864862,
+        "max_k_error": 0.0,
+        "max_imaginary_permittivity_error": 0.0,
+        "accuracy_certified": false
+      },
+      "Au (Gold) - Palik": {
+        "max_n_error": 0.6558529804086315,
+        "max_k_error": 0.9026045749913916,
+        "max_imaginary_permittivity_error": 14.173032698570964,
+        "accuracy_certified": false
+      }
+    }
+  },
+  "wheel_sha256": "7664d6b1d28fa2c206c7f2202241f918afa60aa4cf69fb493d55c331d57d1a6c",
+  "real_solver_run_performed": false
+}

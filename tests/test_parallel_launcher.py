@@ -23,10 +23,20 @@ class ParallelLauncherTests(unittest.TestCase):
         site.mkdir()
         self.trace = self.root/'trace'
         self.trace.mkdir()
+        self.sample_trace = self.root/'sample_trace'
+        self.sample_trace.mkdir()
         # Each child uses the actual CLI, packing and merge implementations.
         # Only the native simulator is replaced by the existing test fixture.
         (site/'sitecustomize.py').write_text('''
 import json, os, pathlib, sys, time
+import psutil
+if os.environ.get('PARALLEL_TEST_CPUS') == '64':
+    # Model the user's 64-CPU host only inside these isolated child fixtures.
+    # The production CPU-budget check remains unchanged.
+    psutil.cpu_count = lambda logical=True: 64
+    import deta_generator.resources as resources
+    resources.cpu_inventory = lambda: dict(budget_cpus=64,psutil_logical_cpus=64,
+        windows_total_logical_cpus=64,processor_groups=1,affinity_count=64,notes=[])
 from test_generator import TestOnlySimulator
 import deta_generator.pipeline as pipeline
 import deta_generator.cli as cli
@@ -39,6 +49,7 @@ cli.native_check = test_native_check
 class TimedTestSimulator(TestOnlySimulator):
     def __enter__(self):
         self.start = time.time()
+        self.run_calls = 0
         return self
     def __exit__(self, *args):
         trace = pathlib.Path(os.environ['PARALLEL_TEST_TRACE'])/f'{os.getpid()}.json'
@@ -48,12 +59,31 @@ class TimedTestSimulator(TestOnlySimulator):
             index = sys.argv[sys.argv.index('--shard-index')+1]
             if index == os.environ['PARALLEL_TEST_FAIL_SHARD']:
                 raise RuntimeError('Deliberate test-only shard failure')
-        time.sleep(.02)
-        return super().run(geometry, project)
+        self.run_calls += 1
+        started = time.time()
+        try:
+            expected = int(os.environ.get('PARALLEL_TEST_BARRIER_JOBS', '0'))
+            if expected and self.run_calls == 1:
+                barrier = pathlib.Path(os.environ['PARALLEL_TEST_BARRIER_DIR'])
+                (barrier/f'{os.getpid()}.ready').write_text('test fixture only')
+                deadline = time.monotonic() + 45
+                while len(list(barrier.glob('*.ready'))) < expected:
+                    if time.monotonic() >= deadline:
+                        raise RuntimeError(f'Test barrier timed out: expected {expected} simultaneous sample.run calls')
+                    time.sleep(.02)
+            time.sleep(.02)
+            return super().run(geometry, project)
+        finally:
+            trace = pathlib.Path(os.environ['PARALLEL_TEST_RUN_TRACE'])/f'{os.getpid()}_{self.run_calls}.json'
+            trace.write_text(json.dumps({'started':started,'ended':time.time(),
+                                         'pid':os.getpid(),'sample':pathlib.Path(project).stem,
+                                         'test_fixture_only':True}))
 pipeline.FDTDSimulator = TimedTestSimulator
 ''',encoding='utf-8')
         self.env = dict(os.environ, PYTHONPATH=os.pathsep.join([str(site),str(ROOT/'src'),str(ROOT/'tests')]),
-                        PARALLEL_TEST_TRACE=str(self.trace))
+                        PARALLEL_TEST_TRACE=str(self.trace), PARALLEL_TEST_RUN_TRACE=str(self.sample_trace),
+                        OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', MKL_NUM_THREADS='1',
+                        NUMEXPR_NUM_THREADS='1')
 
     def tearDown(self):
         self.temp.cleanup()
@@ -62,7 +92,7 @@ pipeline.FDTDSimulator = TimedTestSimulator
         return subprocess.run([POWERSHELL,'-NoProfile','-ExecutionPolicy','Bypass','-File',str(ROOT/'scripts/run-parallel.ps1'),
             '-Command',command,'-Python',sys.executable,'-JobDir',str(self.job),'-Samples',str(samples),
             '-Workers','4','-Concurrency','2','-Threads','1'],env=env or self.env,
-            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',timeout=90)
+            stdout=subprocess.PIPE,stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',timeout=120)
 
     def test_prepare_100_then_parallel_run_merge_and_resume(self):
         prepared = self.invoke('prepare')
@@ -126,7 +156,7 @@ pipeline.FDTDSimulator = TimedTestSimulator
         command = [sys.executable,'-m','deta_generator','parallel','--job-dir',str(self.job),
                    '--samples','8','--workers','4','--concurrency','2','--threads','1']
         result = subprocess.run(command,env=self.env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
-                                text=True,encoding='utf-8',errors='replace',timeout=90)
+                                text=True,encoding='utf-8',errors='replace',timeout=120)
         self.assertEqual(result.returncode,0,result.stdout)
         self.assertTrue((self.root/'preflight_called').exists())
         self.assertIn('Starting CPU dataset generation',result.stdout)
@@ -137,6 +167,51 @@ pipeline.FDTDSimulator = TimedTestSimulator
                                 stderr=subprocess.STDOUT,text=True,encoding='utf-8',errors='replace',timeout=30)
         self.assertEqual(status.returncode,0,status.stdout)
         self.assertIn('success=8/8',status.stdout)
+
+    def test_jobs_four_and_ten_reach_requested_sample_run_overlap(self):
+        # A session-lifetime upper bound also passes a wholly serial launcher.
+        # This barrier instead requires N actual sample.run calls to enter
+        # before any of those test-only calls can finish.
+        for jobs,threads in ((4,16),(10,6)):
+            with self.subTest(jobs=jobs):
+                job = self.root/f'jobs {jobs}'
+                barrier = self.root/f'barrier_{jobs}'
+                barrier.mkdir()
+                run_trace = self.root/f'sample_trace_{jobs}'
+                run_trace.mkdir()
+                env = dict(self.env, PARALLEL_TEST_CPUS='64',
+                           PARALLEL_TEST_BARRIER_JOBS=str(jobs),
+                           PARALLEL_TEST_BARRIER_DIR=str(barrier),
+                           PARALLEL_TEST_RUN_TRACE=str(run_trace))
+                command = [sys.executable,'-m','deta_generator','parallel','--job-dir',str(job),
+                           '--samples',str(jobs),'--workers',str(jobs),'--jobs',str(jobs)]
+                result = subprocess.run(command,env=env,stdout=subprocess.PIPE,stderr=subprocess.STDOUT,
+                                        text=True,encoding='utf-8',errors='replace',timeout=120)
+                failure_logs = '\n'.join(f'{path.name}:\n{path.read_text(encoding="utf-8",errors="replace")[-5000:]}'
+                                         for path in (job/'parallel_logs').glob('*.stderr.log')) if result.returncode else ''
+                self.assertEqual(result.returncode,0,result.stdout+'\n'+failure_logs)
+                self.assertIn('native_engines=0',result.stdout,
+                              'The fake simulator must not be reported as a native FDTD engine')
+                intervals = [json.loads(path.read_text()) for path in run_trace.glob('*.json')]
+                self.assertEqual(len(intervals),jobs,result.stdout)
+                self.assertEqual(len({row['pid'] for row in intervals}),jobs)
+                self.assertTrue(all(row['test_fixture_only'] for row in intervals))
+                events = sorted([(row['started'],1) for row in intervals]+
+                                [(row['ended'],-1) for row in intervals])
+                active = peak = 0
+                for _,change in events:
+                    active += change
+                    peak = max(peak,active)
+                self.assertEqual(peak,jobs,'Requested sample.run concurrency was never reached')
+                self.assertGreater(min(row['ended'] for row in intervals),
+                                   max(row['started'] for row in intervals))
+                config = json.loads((job/'job.json').read_text())
+                self.assertEqual(config['simulation']['threads'],threads)
+                self.assertEqual(config['simulation']['processes'],1)
+                plan = json.loads((job/'parallel_plan.json').read_text(encoding='utf-8-sig'))
+                self.assertEqual(plan['workers'],jobs)
+                with np.load(job/'merged/dataset.npz') as data:
+                    self.assertEqual(data['sample_ids'].tolist(),list(range(jobs)))
 
 
 if __name__ == '__main__': unittest.main()

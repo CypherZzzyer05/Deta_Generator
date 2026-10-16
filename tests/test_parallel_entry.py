@@ -4,7 +4,9 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 from deta_generator.cli import main
-from deta_generator.parallel import run_parallel
+from deta_generator.parallel import run_parallel,resolve_resources
+from tempfile import TemporaryDirectory
+import json
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -13,7 +15,7 @@ class ParallelEntryTests(unittest.TestCase):
     def test_default_pycharm_dispatch_and_old_init_defaults(self):
         with patch('deta_generator.parallel.run_parallel',return_value=0) as launch:
             self.assertEqual(main(['parallel']),0)
-            launch.assert_called_once_with(Path('jobs/au100_metal8_100'),100,4,None,16,None,'start',25)
+            launch.assert_called_once_with(Path('jobs/au100_metal8_100'),100,None,None,None,None,'start',25,jobs=None)
         with patch('deta_generator.cli.initialize',return_value={}) as initialize:
             self.assertEqual(main(['init']),0)
             initialize.assert_called_once_with(Path('jobs/as2se3'),'au-metal',12,8,None,None)
@@ -61,6 +63,35 @@ class ParallelEntryTests(unittest.TestCase):
                 run_parallel('unused',samples=2,workers=4)
             self.assertEqual(main(['parallel','--metal-mesh-nm','4']),1)
             call.assert_not_called()
+
+    def test_jobs_auto_threads_and_small_queued_shards(self):
+        with TemporaryDirectory() as directory, patch('deta_generator.parallel.cpu_inventory',return_value={'budget_cpus':64}):
+            four = resolve_resources(directory,samples=1000,jobs=4)
+            ten = resolve_resources(directory,samples=1000,jobs=10)
+            self.assertEqual((four['workers'],four['concurrency'],four['threads']),(16,4,16))
+            self.assertEqual((ten['workers'],ten['concurrency'],ten['threads']),(40,10,6))
+            with self.assertRaisesRegex(ValueError,'exceeds'):
+                resolve_resources(directory,samples=1000,jobs=10,threads=16)
+            with self.assertRaisesRegex(ValueError,'same active-job'):
+                resolve_resources(directory,samples=1000,jobs=10,concurrency=4)
+
+    def test_existing_four_shard_plan_is_reused_and_never_silently_clamps_ten(self):
+        with TemporaryDirectory() as directory, patch('deta_generator.parallel.cpu_inventory',return_value={'budget_cpus':64}):
+            path = Path(directory)/'parallel_plan.json'
+            path.write_text(json.dumps({'samples':100,'workers':4}),encoding='utf-8-sig')
+            original = path.read_bytes()
+            plan = resolve_resources(directory,jobs=4)
+            self.assertEqual((plan['workers'],plan['threads']),(4,16))
+            with self.assertRaisesRegex(ValueError,'4 shards'):
+                resolve_resources(directory,jobs=10)
+            with self.assertRaisesRegex(ValueError,'Sample count'):
+                resolve_resources(directory,samples=1000,jobs=4)
+            self.assertEqual(path.read_bytes(),original)
+
+    def test_cpu_budget_128_and_serial_option_misuse(self):
+        with TemporaryDirectory() as directory, patch('deta_generator.parallel.cpu_inventory',return_value={'budget_cpus':128}):
+            self.assertEqual(resolve_resources(directory,samples=1000,jobs=10)['threads'],12)
+        self.assertEqual(main(['generate','--jobs','10']),1)
 
 
 if __name__ == '__main__': unittest.main()

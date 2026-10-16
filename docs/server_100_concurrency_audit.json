@@ -1,0 +1,1108 @@
+{
+  "schema_version": 1,
+  "audit_date": "2026-10-16",
+  "timezone": "Asia/Shanghai",
+  "source": {
+    "manifest_sha256": "13b47fd83f6753bc5c9f851db0bc2ff8dee0092b90dd7f6385dbd787fa56b055",
+    "manifest_bytes": 326219,
+    "local_path": "D:\\仿真\\au100_metal8_100\\manifest.json",
+    "merged_shards": [
+      "E:\\CypherzZ\\PythonProject\\Deta_Generator-main\\Deta_Generator-main\\jobs\\au100_metal8_100\\shard0",
+      "E:\\CypherzZ\\PythonProject\\Deta_Generator-main\\Deta_Generator-main\\jobs\\au100_metal8_100\\shard1",
+      "E:\\CypherzZ\\PythonProject\\Deta_Generator-main\\Deta_Generator-main\\jobs\\au100_metal8_100\\shard2",
+      "E:\\CypherzZ\\PythonProject\\Deta_Generator-main\\Deta_Generator-main\\jobs\\au100_metal8_100\\shard3"
+    ],
+    "note": "Read-only audit of the user-uploaded real 100-sample manifest; no solver was run."
+  },
+  "sample_count": 100,
+  "all_success": true,
+  "first_sample_started_at": "2026-10-14T21:28:01.325617+08:00",
+  "last_sample_finished_at": "2026-10-16T00:03:02.070499+08:00",
+  "batch_wall_seconds": 95700.744882,
+  "throughput_samples_per_hour": 3.7617262064562165,
+  "sample_processing_interval_peak": 4,
+  "sample_processing_overlap_seconds": {
+    "0": 0.142002,
+    "1": 4934.378642,
+    "2": 3353.831121,
+    "3": 22704.979842,
+    "4": 64707.413275
+  },
+  "static_four_slot_processing_utilization": 0.8845064296978227,
+  "final_single_shard_tail_seconds": 4933.625985,
+  "solver_call_elapsed_seconds_sum": 338433.519,
+  "solver_call_elapsed_seconds_mean": 3384.33519,
+  "solver_call_elapsed_seconds_median": 1352.4139999999898,
+  "retry_distribution": [
+    {
+      "run_attempts": 1,
+      "samples": 84,
+      "solver_call_elapsed_seconds": 128390.87799999985
+    },
+    {
+      "run_attempts": 2,
+      "samples": 14,
+      "solver_call_elapsed_seconds": 158176.73600000027
+    },
+    {
+      "run_attempts": 3,
+      "samples": 2,
+      "solver_call_elapsed_seconds": 51865.90499999985
+    }
+  ],
+  "shards": [
+    {
+      "index": 0,
+      "samples": 25,
+      "started_at": "2026-10-14T21:28:01.818268+08:00",
+      "finished_at": "2026-10-15T21:44:55.623938+08:00",
+      "wall_seconds": 87413.80567,
+      "solver_call_elapsed_seconds": 87373.25199999975
+    },
+    {
+      "index": 1,
+      "samples": 25,
+      "started_at": "2026-10-14T21:28:02.037263+08:00",
+      "finished_at": "2026-10-15T15:26:32.676162+08:00",
+      "wall_seconds": 64710.638899,
+      "solver_call_elapsed_seconds": 64672.84500000026
+    },
+    {
+      "index": 2,
+      "samples": 25,
+      "started_at": "2026-10-14T21:28:01.325617+08:00",
+      "finished_at": "2026-10-15T22:40:48.444514+08:00",
+      "wall_seconds": 90767.118897,
+      "solver_call_elapsed_seconds": 90726.79499999998
+    },
+    {
+      "index": 3,
+      "samples": 25,
+      "started_at": "2026-10-14T21:28:01.937265+08:00",
+      "finished_at": "2026-10-16T00:03:02.070499+08:00",
+      "wall_seconds": 95700.133234,
+      "solver_call_elapsed_seconds": 95660.62699999998
+    }
+  ],
+  "slowest_sample_ids": [
+    59,
+    68,
+    34,
+    6,
+    67,
+    22,
+    32,
+    3,
+    42,
+    73
+  ],
+  "limitations": [
+    "Sample started/finished timestamps describe processing intervals, not native-engine CPU execution intervals.",
+    "Native engine CPU use, progress overlap, and license waiting were not captured by this manifest.",
+    "Elapsed values include solver-call waiting and retries; their sum is not CPU-hours or a serial benchmark.",
+    "Four-way and ten-way launcher tests use an explicit test simulator; they do not establish native FDTD throughput or license capacity.",
+    "No ten-way native server run was performed for this audit."
+  ],
+  "sample_runtime_records": [
+    {
+      "id": 0,
+      "shard_index": 0,
+      "started_at": "2026-10-14T21:28:01.818268+08:00",
+      "finished_at": "2026-10-14T21:49:31.765438+08:00",
+      "solver_call_elapsed_seconds": 1288.4369999999763,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 1,
+      "shard_index": 1,
+      "started_at": "2026-10-14T21:28:02.037263+08:00",
+      "finished_at": "2026-10-14T22:42:21.163289+08:00",
+      "solver_call_elapsed_seconds": 4457.390000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 2,
+      "shard_index": 2,
+      "started_at": "2026-10-14T21:28:01.325617+08:00",
+      "finished_at": "2026-10-14T21:45:53.777507+08:00",
+      "solver_call_elapsed_seconds": 1070.890000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 3,
+      "shard_index": 3,
+      "started_at": "2026-10-14T21:28:01.937265+08:00",
+      "finished_at": "2026-10-15T00:37:11.520493+08:00",
+      "solver_call_elapsed_seconds": 11347.670999999973,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 4,
+      "shard_index": 0,
+      "started_at": "2026-10-14T21:49:31.803443+08:00",
+      "finished_at": "2026-10-14T22:53:34.557168+08:00",
+      "solver_call_elapsed_seconds": 3840.859999999986,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 5,
+      "shard_index": 1,
+      "started_at": "2026-10-14T22:42:21.203792+08:00",
+      "finished_at": "2026-10-14T23:29:47.308694+08:00",
+      "solver_call_elapsed_seconds": 2844.5160000000033,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 6,
+      "shard_index": 2,
+      "started_at": "2026-10-14T21:45:53.812509+08:00",
+      "finished_at": "2026-10-15T01:24:11.006385+08:00",
+      "solver_call_elapsed_seconds": 13095.405999999959,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 7,
+      "shard_index": 3,
+      "started_at": "2026-10-15T00:37:11.554497+08:00",
+      "finished_at": "2026-10-15T00:44:11.811635+08:00",
+      "solver_call_elapsed_seconds": 418.75,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 8,
+      "shard_index": 0,
+      "started_at": "2026-10-14T22:53:34.594177+08:00",
+      "finished_at": "2026-10-14T23:11:11.797320+08:00",
+      "solver_call_elapsed_seconds": 1055.2030000000377,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 9,
+      "shard_index": 1,
+      "started_at": "2026-10-14T23:29:47.343691+08:00",
+      "finished_at": "2026-10-14T23:51:59.698141+08:00",
+      "solver_call_elapsed_seconds": 1330.7029999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 10,
+      "shard_index": 2,
+      "started_at": "2026-10-15T01:24:11.046387+08:00",
+      "finished_at": "2026-10-15T01:43:35.418378+08:00",
+      "solver_call_elapsed_seconds": 1162.8429999999935,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 11,
+      "shard_index": 3,
+      "started_at": "2026-10-15T00:44:11.847643+08:00",
+      "finished_at": "2026-10-15T01:18:07.999472+08:00",
+      "solver_call_elapsed_seconds": 2034.734999999986,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 12,
+      "shard_index": 0,
+      "started_at": "2026-10-14T23:11:11.831322+08:00",
+      "finished_at": "2026-10-14T23:34:14.376928+08:00",
+      "solver_call_elapsed_seconds": 1380.8130000000237,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 13,
+      "shard_index": 1,
+      "started_at": "2026-10-14T23:51:59.727146+08:00",
+      "finished_at": "2026-10-15T00:27:43.779376+08:00",
+      "solver_call_elapsed_seconds": 2142.7810000000172,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 14,
+      "shard_index": 2,
+      "started_at": "2026-10-15T01:43:35.450372+08:00",
+      "finished_at": "2026-10-15T02:24:37.617668+08:00",
+      "solver_call_elapsed_seconds": 2460.6880000000237,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 15,
+      "shard_index": 3,
+      "started_at": "2026-10-15T01:18:08.032467+08:00",
+      "finished_at": "2026-10-15T02:04:46.021812+08:00",
+      "solver_call_elapsed_seconds": 2796.6089999999967,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 16,
+      "shard_index": 0,
+      "started_at": "2026-10-14T23:34:14.416933+08:00",
+      "finished_at": "2026-10-15T00:11:31.536541+08:00",
+      "solver_call_elapsed_seconds": 2235.75,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 17,
+      "shard_index": 1,
+      "started_at": "2026-10-15T00:27:43.811367+08:00",
+      "finished_at": "2026-10-15T00:41:22.495933+08:00",
+      "solver_call_elapsed_seconds": 817.3130000000237,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 18,
+      "shard_index": 2,
+      "started_at": "2026-10-15T02:24:37.653892+08:00",
+      "finished_at": "2026-10-15T02:39:56.702794+08:00",
+      "solver_call_elapsed_seconds": 917.295999999973,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 19,
+      "shard_index": 3,
+      "started_at": "2026-10-15T02:04:46.051811+08:00",
+      "finished_at": "2026-10-15T02:25:54.578250+08:00",
+      "solver_call_elapsed_seconds": 1267.2820000000065,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 20,
+      "shard_index": 0,
+      "started_at": "2026-10-15T00:11:31.562421+08:00",
+      "finished_at": "2026-10-15T00:54:01.145844+08:00",
+      "solver_call_elapsed_seconds": 2547.984999999986,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 21,
+      "shard_index": 1,
+      "started_at": "2026-10-15T00:41:22.528932+08:00",
+      "finished_at": "2026-10-15T01:58:01.820831+08:00",
+      "solver_call_elapsed_seconds": 4597.921999999962,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 22,
+      "shard_index": 2,
+      "started_at": "2026-10-15T02:39:56.740751+08:00",
+      "finished_at": "2026-10-15T06:00:43.593533+08:00",
+      "solver_call_elapsed_seconds": 12044.905999999959,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 23,
+      "shard_index": 3,
+      "started_at": "2026-10-15T02:25:54.612252+08:00",
+      "finished_at": "2026-10-15T02:44:43.572542+08:00",
+      "solver_call_elapsed_seconds": 1127.3439999999828,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 24,
+      "shard_index": 0,
+      "started_at": "2026-10-15T00:54:01.185842+08:00",
+      "finished_at": "2026-10-15T03:44:51.185026+08:00",
+      "solver_call_elapsed_seconds": 10248.391000000003,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 25,
+      "shard_index": 1,
+      "started_at": "2026-10-15T01:58:01.855831+08:00",
+      "finished_at": "2026-10-15T02:12:11.895469+08:00",
+      "solver_call_elapsed_seconds": 848.6100000000442,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 26,
+      "shard_index": 2,
+      "started_at": "2026-10-15T06:00:43.632542+08:00",
+      "finished_at": "2026-10-15T06:26:43.301317+08:00",
+      "solver_call_elapsed_seconds": 1557.9530000000377,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 27,
+      "shard_index": 3,
+      "started_at": "2026-10-15T02:44:43.603558+08:00",
+      "finished_at": "2026-10-15T03:03:16.726331+08:00",
+      "solver_call_elapsed_seconds": 1111.7970000000205,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 28,
+      "shard_index": 0,
+      "started_at": "2026-10-15T03:44:51.217913+08:00",
+      "finished_at": "2026-10-15T03:50:47.043656+08:00",
+      "solver_call_elapsed_seconds": 354.594000000041,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 29,
+      "shard_index": 1,
+      "started_at": "2026-10-15T02:12:11.930474+08:00",
+      "finished_at": "2026-10-15T02:35:31.501082+08:00",
+      "solver_call_elapsed_seconds": 1398.265000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 30,
+      "shard_index": 2,
+      "started_at": "2026-10-15T06:26:43.331315+08:00",
+      "finished_at": "2026-10-15T06:40:02.325992+08:00",
+      "solver_call_elapsed_seconds": 797.2969999999623,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 31,
+      "shard_index": 3,
+      "started_at": "2026-10-15T03:03:16.764333+08:00",
+      "finished_at": "2026-10-15T05:49:45.305393+08:00",
+      "solver_call_elapsed_seconds": 9986.59500000003,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 32,
+      "shard_index": 0,
+      "started_at": "2026-10-15T03:50:47.084662+08:00",
+      "finished_at": "2026-10-15T07:03:30.392879+08:00",
+      "solver_call_elapsed_seconds": 11561.625,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 33,
+      "shard_index": 1,
+      "started_at": "2026-10-15T02:35:31.534822+08:00",
+      "finished_at": "2026-10-15T03:03:08.898766+08:00",
+      "solver_call_elapsed_seconds": 1655.875,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 34,
+      "shard_index": 2,
+      "started_at": "2026-10-15T06:40:02.351992+08:00",
+      "finished_at": "2026-10-15T10:21:16.361368+08:00",
+      "solver_call_elapsed_seconds": 13272.173000000068,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 35,
+      "shard_index": 3,
+      "started_at": "2026-10-15T05:49:45.339258+08:00",
+      "finished_at": "2026-10-15T06:01:42.745969+08:00",
+      "solver_call_elapsed_seconds": 715.5779999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 36,
+      "shard_index": 0,
+      "started_at": "2026-10-15T07:03:30.419881+08:00",
+      "finished_at": "2026-10-15T07:25:04.796893+08:00",
+      "solver_call_elapsed_seconds": 1292.9219999999623,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 37,
+      "shard_index": 1,
+      "started_at": "2026-10-15T03:03:08.935425+08:00",
+      "finished_at": "2026-10-15T03:15:54.947072+08:00",
+      "solver_call_elapsed_seconds": 764.3910000000033,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 38,
+      "shard_index": 2,
+      "started_at": "2026-10-15T10:21:16.399366+08:00",
+      "finished_at": "2026-10-15T11:09:41.975027+08:00",
+      "solver_call_elapsed_seconds": 2903.890000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 39,
+      "shard_index": 3,
+      "started_at": "2026-10-15T06:01:42.789960+08:00",
+      "finished_at": "2026-10-15T06:19:49.687032+08:00",
+      "solver_call_elapsed_seconds": 1085.3119999999763,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 40,
+      "shard_index": 0,
+      "started_at": "2026-10-15T07:25:04.990897+08:00",
+      "finished_at": "2026-10-15T07:50:01.462654+08:00",
+      "solver_call_elapsed_seconds": 1494.9219999999623,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 41,
+      "shard_index": 1,
+      "started_at": "2026-10-15T03:15:55.129067+08:00",
+      "finished_at": "2026-10-15T03:35:11.338221+08:00",
+      "solver_call_elapsed_seconds": 1154.5779999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 42,
+      "shard_index": 2,
+      "started_at": "2026-10-15T11:09:42.248042+08:00",
+      "finished_at": "2026-10-15T14:16:09.901917+08:00",
+      "solver_call_elapsed_seconds": 11185.984999999986,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 43,
+      "shard_index": 3,
+      "started_at": "2026-10-15T06:19:49.876034+08:00",
+      "finished_at": "2026-10-15T07:03:19.968304+08:00",
+      "solver_call_elapsed_seconds": 2608.5160000000033,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 44,
+      "shard_index": 0,
+      "started_at": "2026-10-15T07:50:01.498659+08:00",
+      "finished_at": "2026-10-15T08:18:20.332895+08:00",
+      "solver_call_elapsed_seconds": 1697.3129999999655,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 45,
+      "shard_index": 1,
+      "started_at": "2026-10-15T03:35:11.372221+08:00",
+      "finished_at": "2026-10-15T03:46:09.016596+08:00",
+      "solver_call_elapsed_seconds": 656.2339999999967,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 46,
+      "shard_index": 2,
+      "started_at": "2026-10-15T14:16:09.938919+08:00",
+      "finished_at": "2026-10-15T15:05:43.907736+08:00",
+      "solver_call_elapsed_seconds": 2972.329000000027,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 47,
+      "shard_index": 3,
+      "started_at": "2026-10-15T07:03:20.001301+08:00",
+      "finished_at": "2026-10-15T07:21:10.153262+08:00",
+      "solver_call_elapsed_seconds": 1068.7030000000377,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 48,
+      "shard_index": 0,
+      "started_at": "2026-10-15T08:18:20.373917+08:00",
+      "finished_at": "2026-10-15T08:54:04.907896+08:00",
+      "solver_call_elapsed_seconds": 2143.0470000000205,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 49,
+      "shard_index": 1,
+      "started_at": "2026-10-15T03:46:09.051112+08:00",
+      "finished_at": "2026-10-15T04:02:03.683840+08:00",
+      "solver_call_elapsed_seconds": 953.25,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 50,
+      "shard_index": 2,
+      "started_at": "2026-10-15T15:05:43.947751+08:00",
+      "finished_at": "2026-10-15T15:50:35.742516+08:00",
+      "solver_call_elapsed_seconds": 2690.140999999945,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 51,
+      "shard_index": 3,
+      "started_at": "2026-10-15T07:21:10.190266+08:00",
+      "finished_at": "2026-10-15T07:34:28.670879+08:00",
+      "solver_call_elapsed_seconds": 796.9679999999935,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 52,
+      "shard_index": 0,
+      "started_at": "2026-10-15T08:54:04.941889+08:00",
+      "finished_at": "2026-10-15T09:12:40.226852+08:00",
+      "solver_call_elapsed_seconds": 1113.875,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 53,
+      "shard_index": 1,
+      "started_at": "2026-10-15T04:02:03.718862+08:00",
+      "finished_at": "2026-10-15T04:25:58.660505+08:00",
+      "solver_call_elapsed_seconds": 1433.5780000000377,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 54,
+      "shard_index": 2,
+      "started_at": "2026-10-15T15:50:35.774532+08:00",
+      "finished_at": "2026-10-15T16:08:08.689596+08:00",
+      "solver_call_elapsed_seconds": 1051.625,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 55,
+      "shard_index": 3,
+      "started_at": "2026-10-15T07:34:28.700873+08:00",
+      "finished_at": "2026-10-15T08:16:30.701578+08:00",
+      "solver_call_elapsed_seconds": 2520.7339999999967,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 56,
+      "shard_index": 0,
+      "started_at": "2026-10-15T09:12:40.271849+08:00",
+      "finished_at": "2026-10-15T09:21:28.691827+08:00",
+      "solver_call_elapsed_seconds": 527.0779999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 57,
+      "shard_index": 1,
+      "started_at": "2026-10-15T04:25:58.692502+08:00",
+      "finished_at": "2026-10-15T04:45:20.841200+08:00",
+      "solver_call_elapsed_seconds": 1160.859999999986,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 58,
+      "shard_index": 2,
+      "started_at": "2026-10-15T16:08:08.718597+08:00",
+      "finished_at": "2026-10-15T16:20:15.693889+08:00",
+      "solver_call_elapsed_seconds": 725.4529999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 59,
+      "shard_index": 3,
+      "started_at": "2026-10-15T08:16:30.735581+08:00",
+      "finished_at": "2026-10-15T15:43:26.851631+08:00",
+      "solver_call_elapsed_seconds": 26814.186999999976,
+      "run_attempts": 3,
+      "final_simulation_time_ps": 16.0,
+      "status": 2
+    },
+    {
+      "id": 60,
+      "shard_index": 0,
+      "started_at": "2026-10-15T09:21:28.724840+08:00",
+      "finished_at": "2026-10-15T10:07:40.523361+08:00",
+      "solver_call_elapsed_seconds": 2770.1570000000065,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 61,
+      "shard_index": 1,
+      "started_at": "2026-10-15T04:45:20.877198+08:00",
+      "finished_at": "2026-10-15T05:28:35.165880+08:00",
+      "solver_call_elapsed_seconds": 2592.9220000000205,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 62,
+      "shard_index": 2,
+      "started_at": "2026-10-15T16:20:15.727887+08:00",
+      "finished_at": "2026-10-15T16:57:12.024204+08:00",
+      "solver_call_elapsed_seconds": 2214.9529999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 63,
+      "shard_index": 3,
+      "started_at": "2026-10-15T15:43:26.888631+08:00",
+      "finished_at": "2026-10-15T15:52:29.443410+08:00",
+      "solver_call_elapsed_seconds": 541.1089999999385,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 64,
+      "shard_index": 0,
+      "started_at": "2026-10-15T10:07:40.564356+08:00",
+      "finished_at": "2026-10-15T10:28:19.544450+08:00",
+      "solver_call_elapsed_seconds": 1237.5,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 65,
+      "shard_index": 1,
+      "started_at": "2026-10-15T05:28:35.199890+08:00",
+      "finished_at": "2026-10-15T08:32:15.480880+08:00",
+      "solver_call_elapsed_seconds": 11018.735000000044,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 66,
+      "shard_index": 2,
+      "started_at": "2026-10-15T16:57:12.054207+08:00",
+      "finished_at": "2026-10-15T17:32:21.821185+08:00",
+      "solver_call_elapsed_seconds": 2108.420999999973,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 67,
+      "shard_index": 3,
+      "started_at": "2026-10-15T15:52:29.475942+08:00",
+      "finished_at": "2026-10-15T19:23:28.590319+08:00",
+      "solver_call_elapsed_seconds": 12657.484000000055,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 68,
+      "shard_index": 0,
+      "started_at": "2026-10-15T10:28:19.576449+08:00",
+      "finished_at": "2026-10-15T17:25:53.194151+08:00",
+      "solver_call_elapsed_seconds": 25051.717999999877,
+      "run_attempts": 3,
+      "final_simulation_time_ps": 16.0,
+      "status": 2
+    },
+    {
+      "id": 69,
+      "shard_index": 1,
+      "started_at": "2026-10-15T08:32:15.516890+08:00",
+      "finished_at": "2026-10-15T08:51:49.422554+08:00",
+      "solver_call_elapsed_seconds": 1172.5619999999763,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 70,
+      "shard_index": 2,
+      "started_at": "2026-10-15T17:32:21.852190+08:00",
+      "finished_at": "2026-10-15T17:52:40.454203+08:00",
+      "solver_call_elapsed_seconds": 1217.219000000041,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 71,
+      "shard_index": 3,
+      "started_at": "2026-10-15T19:23:28.626314+08:00",
+      "finished_at": "2026-10-15T19:38:47.136102+08:00",
+      "solver_call_elapsed_seconds": 917.0629999999655,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 72,
+      "shard_index": 0,
+      "started_at": "2026-10-15T17:25:53.227143+08:00",
+      "finished_at": "2026-10-15T17:46:19.461012+08:00",
+      "solver_call_elapsed_seconds": 1224.686999999918,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 73,
+      "shard_index": 1,
+      "started_at": "2026-10-15T08:51:49.459089+08:00",
+      "finished_at": "2026-10-15T11:57:59.922810+08:00",
+      "solver_call_elapsed_seconds": 11168.828000000038,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 74,
+      "shard_index": 2,
+      "started_at": "2026-10-15T17:52:40.490208+08:00",
+      "finished_at": "2026-10-15T18:17:54.008707+08:00",
+      "solver_call_elapsed_seconds": 1512.094000000041,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 75,
+      "shard_index": 3,
+      "started_at": "2026-10-15T19:38:47.168106+08:00",
+      "finished_at": "2026-10-15T22:20:20.725194+08:00",
+      "solver_call_elapsed_seconds": 9691.906000000075,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 76,
+      "shard_index": 0,
+      "started_at": "2026-10-15T17:46:19.494019+08:00",
+      "finished_at": "2026-10-15T20:43:48.417064+08:00",
+      "solver_call_elapsed_seconds": 10646.984999999986,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 77,
+      "shard_index": 1,
+      "started_at": "2026-10-15T11:57:59.956502+08:00",
+      "finished_at": "2026-10-15T12:15:00.568765+08:00",
+      "solver_call_elapsed_seconds": 1019.2820000000065,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 78,
+      "shard_index": 2,
+      "started_at": "2026-10-15T18:17:54.040708+08:00",
+      "finished_at": "2026-10-15T18:34:59.326379+08:00",
+      "solver_call_elapsed_seconds": 1023.9379999999655,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 79,
+      "shard_index": 3,
+      "started_at": "2026-10-15T22:20:20.759196+08:00",
+      "finished_at": "2026-10-15T22:40:01.719615+08:00",
+      "solver_call_elapsed_seconds": 1179.4379999999655,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 80,
+      "shard_index": 0,
+      "started_at": "2026-10-15T20:43:48.751024+08:00",
+      "finished_at": "2026-10-15T20:52:26.065688+08:00",
+      "solver_call_elapsed_seconds": 516.015000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 81,
+      "shard_index": 1,
+      "started_at": "2026-10-15T12:15:00.759763+08:00",
+      "finished_at": "2026-10-15T12:37:56.296582+08:00",
+      "solver_call_elapsed_seconds": 1374.125,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 82,
+      "shard_index": 2,
+      "started_at": "2026-10-15T18:34:59.584373+08:00",
+      "finished_at": "2026-10-15T18:51:12.780930+08:00",
+      "solver_call_elapsed_seconds": 971.640000000014,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 83,
+      "shard_index": 3,
+      "started_at": "2026-10-15T22:40:02.087621+08:00",
+      "finished_at": "2026-10-15T22:54:12.720679+08:00",
+      "solver_call_elapsed_seconds": 849.140999999945,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 84,
+      "shard_index": 0,
+      "started_at": "2026-10-15T20:52:26.105687+08:00",
+      "finished_at": "2026-10-15T21:08:30.051237+08:00",
+      "solver_call_elapsed_seconds": 962.234000000055,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 85,
+      "shard_index": 1,
+      "started_at": "2026-10-15T12:37:56.335582+08:00",
+      "finished_at": "2026-10-15T13:40:21.841141+08:00",
+      "solver_call_elapsed_seconds": 3744.0160000000615,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 86,
+      "shard_index": 2,
+      "started_at": "2026-10-15T18:51:12.814934+08:00",
+      "finished_at": "2026-10-15T19:20:17.783691+08:00",
+      "solver_call_elapsed_seconds": 1743.625,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 87,
+      "shard_index": 3,
+      "started_at": "2026-10-15T22:54:12.755695+08:00",
+      "finished_at": "2026-10-15T23:05:12.096974+08:00",
+      "solver_call_elapsed_seconds": 657.9070000000065,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 88,
+      "shard_index": 0,
+      "started_at": "2026-10-15T21:08:30.083247+08:00",
+      "finished_at": "2026-10-15T21:16:46.661354+08:00",
+      "solver_call_elapsed_seconds": 494.93799999996554,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 89,
+      "shard_index": 1,
+      "started_at": "2026-10-15T13:40:21.874167+08:00",
+      "finished_at": "2026-10-15T13:58:18.439363+08:00",
+      "solver_call_elapsed_seconds": 1075.1720000000205,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 90,
+      "shard_index": 2,
+      "started_at": "2026-10-15T19:20:17.816690+08:00",
+      "finished_at": "2026-10-15T19:33:46.829161+08:00",
+      "solver_call_elapsed_seconds": 807.436999999918,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 91,
+      "shard_index": 3,
+      "started_at": "2026-10-15T23:05:12.142963+08:00",
+      "finished_at": "2026-10-15T23:37:05.830268+08:00",
+      "solver_call_elapsed_seconds": 1912.2660000000615,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 92,
+      "shard_index": 0,
+      "started_at": "2026-10-15T21:16:46.694358+08:00",
+      "finished_at": "2026-10-15T21:34:39.515204+08:00",
+      "solver_call_elapsed_seconds": 1071.484000000055,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 93,
+      "shard_index": 1,
+      "started_at": "2026-10-15T13:58:18.484366+08:00",
+      "finished_at": "2026-10-15T14:54:48.936836+08:00",
+      "solver_call_elapsed_seconds": 3388.7660000000615,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 94,
+      "shard_index": 2,
+      "started_at": "2026-10-15T19:33:46.865161+08:00",
+      "finished_at": "2026-10-15T19:49:56.765468+08:00",
+      "solver_call_elapsed_seconds": 968.5470000000205,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 95,
+      "shard_index": 3,
+      "started_at": "2026-10-15T23:37:05.855267+08:00",
+      "finished_at": "2026-10-15T23:45:43.901076+08:00",
+      "solver_call_elapsed_seconds": 516.829000000027,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 96,
+      "shard_index": 0,
+      "started_at": "2026-10-15T21:34:39.548229+08:00",
+      "finished_at": "2026-10-15T21:44:55.623938+08:00",
+      "solver_call_elapsed_seconds": 614.7189999999246,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 97,
+      "shard_index": 1,
+      "started_at": "2026-10-15T14:54:48.977839+08:00",
+      "finished_at": "2026-10-15T15:26:32.676162+08:00",
+      "solver_call_elapsed_seconds": 1902.170999999973,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    },
+    {
+      "id": 98,
+      "shard_index": 2,
+      "started_at": "2026-10-15T19:49:56.798470+08:00",
+      "finished_at": "2026-10-15T22:40:48.444514+08:00",
+      "solver_call_elapsed_seconds": 10250.04600000009,
+      "run_attempts": 2,
+      "final_simulation_time_ps": 8.0,
+      "status": 2
+    },
+    {
+      "id": 99,
+      "shard_index": 3,
+      "started_at": "2026-10-15T23:45:43.937074+08:00",
+      "finished_at": "2026-10-16T00:03:02.070499+08:00",
+      "solver_call_elapsed_seconds": 1036.7029999999795,
+      "run_attempts": 1,
+      "final_simulation_time_ps": 4.0,
+      "status": 2
+    }
+  ]
+}

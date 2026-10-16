@@ -1,6 +1,33 @@
 # 100样本并行采集与模型验证
 
-`deta-generator 0.1.3`把Windows控制器封装进Python包，可像原来的au8nm一样在PyCharm中点击运行。求解、材料、网格与数据指纹实现沿用0.1.2，三份物理源文件SHA256完全相同。包版本升级为0.1.3，数据物理实现标识仍为`deta-generator/0.1.2`，已有对应任务可续算。旧0.1.2用户需安装一次新版才能使用`parallel`入口；独立`scripts/run-parallel.ps1`仍可调用0.1.2。
+`deta-generator 0.1.4`提供明确的`--jobs 4/10`入口和独立原生引擎监控，可像原来的au8nm一样在PyCharm中点击运行。求解、材料、网格与数据指纹实现沿用0.1.2，三份物理源文件SHA256完全相同，数据实现标识仍为`deta-generator/0.1.2`。已有任务保持原计划续算；新版Python入口和仓库内新版PS脚本均需安装0.1.4。
+
+## 本次更新：十个样本同时计算
+
+用户上一批日志已经显示四个独立PID；传回manifest的四路样本处理区间也明确重叠。因此本次没有把一个已证实串行的控制器“修成并行”，而是补齐可选择十路、细分任务和真实进度证据。完整服务器记录见[100样本并行审计](server_100_concurrency_audit.md)。
+
+PyCharm模块保持`deta_generator`，下一批例如计划1000样本，参数直接填写：
+
+```text
+parallel --job-dir jobs/au100_metal8_1000_p10 --samples 1000 --jobs 10
+```
+
+- `jobs=10`表示最多同时计算十个不同结构；`threads`表示每个结构的线程数，`processes=1`仍为每个结构的MPI进程数。
+- 不填threads会自动分配：64个可用逻辑CPU为10×6=60线程；128个为10×12=120线程。操作系统检查包含Windows所有处理器组，并显示旧系统或亲和性限制；不修改系统亲和性。
+- 新任务默认建立`min(样本数, jobs×4, 64)`个固定小分片，因此1000样本/10路对应40片、每片25样本，最多10片同时活跃。一个完成就接下一片。`workers`是固定分片数，通常无需填写。
+- 控制台显示`workers_alive`（活着的Python生成器）和`native_engines`（实际观测到的FDTD引擎），还有各片当前sample、百分比、Auto Shutoff及日志更新时间。引擎数是进程树观察下界；权限或父进程关系可能使部分引擎不可见。
+- `parallel_launch.json`记录安装包路径、版本、CPU检查、十路资源预算；`parallel_status.json`记录当前和曾观测到的峰值引擎数。监控持续观察到多worker但仅0/1引擎时提示核对初始化、许可、资源及权限，不能只凭PID数宣称原生并发。
+- Windows监控使用共享读写删除句柄，读取JSON字节后立即关闭，再解析。并行子生成器入口对短暂的JSON原子替换共享冲突做有界重试（最多40次、间隔50毫秒）；永久权限错误仍报错。这仅改变结果持久化策略，三份物理源文件及其指纹保持原样。
+
+仅看状态可复制运行配置，在同一行末尾加`--parallel-action status`；不启动新求解。仍可用`--parallel-action prepare`只准备和固定计划。独立PS入口也支持`-Jobs 10`；需要先prepare并按原步骤preflight：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -Command prepare -JobDir .\jobs\au100_metal8_1000_p10 -Samples 1000 -Jobs 10 -Python python -Lumapi 'E:\Lumerical\ANSYS Inc\v251\Lumerical\api\python\lumapi.py'
+python -m deta_generator preflight --config jobs/au100_metal8_1000_p10/job.json
+powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -Command run -JobDir .\jobs\au100_metal8_1000_p10 -Samples 1000 -Jobs 10 -Python python
+```
+
+已有四分片目录不允许直接请求十路或改变workers，拒绝时不会改样本。继续旧任务仍用`--workers 4 --jobs 4`；原样本不会变成新1000样本计划的一部分，跨不同sample_count的任务禁止直接合并。此次没有修改采样、材料、网格、自动关断及数据质量，也没有自动扩采服务器数据。
 
 单条`generate`内部逐个求解。新增脚本同时启动多个独立Python生成器，每一路的单次求解仍采用`processes=1`，默认每路16线程。四路共64线程；`--processes`是单结构求解的MPI进程数，不代表同时生成多少个结构。
 
@@ -9,12 +36,12 @@
 - 新任务目录：`jobs/au100_metal8_100`，保留已有12样本任务。
 - 100 nm Au，仅金属z网格8 nm；其余区域自动网格；七参数范围和固定种子不变。
 - 100个不同结构，每个1000个波长点；预先固定80训练、10验证、10测试。
-- 四片，每片25个ID：0/4/8…、1/5/9…、2/6/10…、3/7/11…。所有分片读取同一个job.json，输出分别为shard0…shard3。
+- 历史显式四片计划：每片25个ID，分别为0/4/8…、1/5/9…等；新版未指定workers的新100样本/四路任务采用16小片。所有分片读取同一个job.json，各自写shardN。
 - 版本、材料拟合、几何、状态及校验值由生成器在续算/合并时检查。12样本任务和100样本任务指纹不同，不直接混合旧文件。
 
 ## PyCharm点击运行（推荐）
 
-1. 安装仓库`artifacts/deta_generator-0.1.3-py3-none-any.whl`，确认版本为0.1.3。
+1. 安装仓库`artifacts/deta_generator-0.1.4-py3-none-any.whl`，确认版本为0.1.4。
 2. 复制原来的au8nm Python运行配置，名称改为`Au8nm_100并行`，模块保持`deta_generator`。
 3. 解释器保持`E:\anaconda3\envs\fdtd_gen\python.exe`；工作目录保持`E:\CypherzZ\PythonProject\Deta_Generator-main\Deta_Generator-main`。
 4. 环境变量保持`LUMERICAL_LUMAPI_PATH=E:\Lumerical\ANSYS Inc\v251\Lumerical\api\python\lumapi.py`。取消两个添加内容根/源根到PYTHONPATH的勾选，避免旧源码覆盖已安装版本。
@@ -79,7 +106,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -
 
 目前只有首结构单任务32线程实测：919.078秒（15分19秒）。按同样平均耗时，100个串行约25.53小时。
 
-四路16线程尚未实测，不能把25.53小时直接除以4。分片完工时间由最慢那一路决定；结构共振寿命、网格数量、重试、线程减少及共享内存带宽都会影响每个样本的时间。
+以下是采集100样本前的历史场景估算。现已传回的四路16线程100样本实际总历时26小时35分钟，均值56.41分钟/样本（累计调用耗时除以100），最慢样本7小时27分钟。16%的延时重跑样本贡献约62.1%的累计耗时；这些值包含等待，不能当CPU工时。新十路尚未在服务器原生实测，不能承诺比四路快2.5倍。详细数据见并行审计。
 
 | 四路并发下的假定平均单样本耗时 | 每片25个样本的预计时间 |
 |---|---:|
@@ -102,3 +129,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\run-parallel.ps1 -
 
 - [Ansys并行性能调优](https://optics.ansys.com/hc/en-us/articles/4403788796947-Getting-the-Best-FDTD-Performance)：实际最佳线程/进程配置和吞吐需对模型及硬件测量。
 - [Ansys求解与并发许可](https://optics.ansys.com/hc/en-us/articles/360058577794-Ansys-optics-solve-accelerator-and-Ansys-HPC-license-consumption)：并发许可随许可类型、启动方式和核心数变化，不能仅由一次求解成功推断。
+- [Microsoft全部处理器组计数](https://learn.microsoft.com/en-us/windows/win32/api/winbase/nf-winbase-getactiveprocessorcount)：ALL_PROCESSOR_GROUPS读取全系统逻辑处理器。
+- [Microsoft处理器组](https://learn.microsoft.com/en-us/windows/win32/procthread/processor-groups)：Windows11/Server2022起默认可跨处理器组；旧系统采用保守预算并显示硬件总数。
+- [psutil CPU说明](https://psutil.readthedocs.io/stable/#psutil.cpu_count)：系统逻辑CPU数与进程可用CPU不一定相同。
+- [Python官方Windows原子替换讨论](https://bugs.python.org/issue46003)：已有目标文件被读取时，MoveFileEx可能失败，即使读句柄允许共享删除；不能只依赖读取端的共享标志。

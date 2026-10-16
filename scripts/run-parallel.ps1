@@ -4,9 +4,10 @@ param(
     [string]$Python = 'python',
     [string]$JobDir = '.\jobs\au100_metal8_100',
     [ValidateRange(1,1000000)][int]$Samples = 100,
-    [ValidateRange(1,64)][int]$Workers = 4,
-    [ValidateRange(1,64)][int]$Concurrency = 4,
-    [ValidateRange(1,1024)][int]$Threads = 16,
+    [ValidateRange(0,64)][int]$Jobs = 0,
+    [ValidateRange(0,64)][int]$Workers = 0,
+    [ValidateRange(0,64)][int]$Concurrency = 0,
+    [ValidateRange(0,1024)][int]$Threads = 0,
     [string]$Lumapi = '',
     [ValidateRange(1,10000)][int]$PackEvery = 10
 )
@@ -16,14 +17,29 @@ $jobRoot = [System.IO.Path]::GetFullPath($JobDir)
 $configPath = Join-Path $jobRoot 'job.json'
 $layoutPath = Join-Path $jobRoot 'parallel_plan.json'
 $mergedPath = Join-Path $jobRoot 'merged'
-$pythonInfo = & $Python -c 'import sys,json,deta_generator,psutil; print(json.dumps(dict(python=sys.executable,version=deta_generator.__version__,cpus=psutil.cpu_count())))'
+$pythonInfo = & $Python -c 'import sys,json,deta_generator; from deta_generator.resources import cpu_inventory; info=cpu_inventory(); print(json.dumps(dict(python=sys.executable,version=deta_generator.__version__,package_file=deta_generator.__file__,cpus=info[''budget_cpus''],cpu_inventory=info)))'
 if ($LASTEXITCODE -ne 0) { throw 'Cannot load deta_generator in the selected Python environment.' }
 $pythonInfo = $pythonInfo | ConvertFrom-Json
-if ([version]$pythonInfo.version -lt [version]'0.1.2') { throw 'Install deta-generator 0.1.2 or newer first.' }
+if ([version]$pythonInfo.version -lt [version]'0.1.4') { throw 'Install deta-generator 0.1.4 or newer first.' }
 $pythonExe = $pythonInfo.python
-if ($Concurrency -gt $Workers) { $Concurrency = $Workers }
-if ($Command -eq 'run' -and $Concurrency * $Threads -gt $pythonInfo.cpus) {
-    throw "Concurrency * Threads exceeds the $($pythonInfo.cpus) logical CPUs available."
+if ($Jobs -gt 0) {
+    if ($Concurrency -gt 0 -and $Concurrency -ne $Jobs) { throw '-Jobs and -Concurrency must agree; specify only -Jobs.' }
+    $Concurrency = $Jobs
+}
+$explicitConcurrency = $Concurrency -gt 0
+if ($Concurrency -eq 0) { $Concurrency = [Math]::Min(4,$Samples) }
+if ($Workers -eq 0) {
+    if (Test-Path -LiteralPath $layoutPath) {
+        $Workers = (Get-Content -LiteralPath $layoutPath -Raw | ConvertFrom-Json).workers
+    } else { $Workers = [Math]::Min([Math]::Min(64,$Samples),$Concurrency*4) }
+}
+if (-not $explicitConcurrency) { $Concurrency = [Math]::Min($Concurrency,$Workers) }
+if ($Workers -gt $Samples -or $Concurrency -gt $Workers) {
+    throw "Requested $Concurrency active jobs but task has $Workers shards and $Samples samples. Use a new JobDir for more shards."
+}
+if ($Threads -eq 0) { $Threads = [Math]::Max(1,[Math]::Floor($pythonInfo.cpus/$Concurrency)) }
+if ($Concurrency * $Threads -gt $pythonInfo.cpus) {
+    throw "$Concurrency jobs x $Threads threads exceeds the $($pythonInfo.cpus) usable CPUs. Omit Threads for automatic allocation."
 }
 
 function Invoke-Generator([string[]]$GeneratorArgs) {
@@ -47,23 +63,17 @@ function Assert-Task {
     }
 }
 
-function Show-Progress {
-    $counts = @{ pending=0; running=0; success=0; failed=0 }
-    for ($index=0; $index -lt $Workers; $index++) {
-        $manifestPath = Join-Path $jobRoot "shard$index\manifest.json"
-        $manifest = $null
-        if (Test-Path -LiteralPath $manifestPath) {
-            $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
-        }
-        for ($sampleId=$index; $sampleId -lt $Samples; $sampleId+=$Workers) {
-            $state = 'pending'
-            if ($null -ne $manifest) { $state = $manifest.samples[$sampleId].state }
-            $counts[$state]++
-        }
-    }
-    Write-Host ("{0}  success={1}/{2}, running={3}, failed={4}, pending={5}" -f
-        (Get-Date -Format 'HH:mm:ss'),$counts.success,$Samples,$counts.running,$counts.failed,$counts.pending)
-    return $counts
+function Show-Progress([switch]$WriteSnapshot) {
+    try {
+        $monitorArgs = @('-m','deta_generator.monitor','--job-dir',$jobRoot,'--expected-jobs',"$Concurrency")
+        if ($WriteSnapshot) { $monitorArgs += '--write-snapshot' }
+        $monitorOutput = & $pythonExe @monitorArgs
+        if ($LASTEXITCODE -ne 0) { throw 'Native process observation unavailable' }
+        foreach ($line in $monitorOutput) { Write-Host $line }
+        return
+    } catch { Write-Warning 'Detailed parallel monitor unavailable; see shard logs. Generation is continuing.' }
+    # Do not fall back to Get-Content on live manifests: ordinary Windows read
+    # handles can deny DELETE sharing and interfere with their atomic replace.
 }
 
 function Merge-Results {
@@ -93,7 +103,7 @@ if ($Command -eq 'prepare') {
             ConvertTo-Json | Set-Content -LiteralPath $layoutPath -Encoding UTF8
     }
     Invoke-Generator @('plan','--config',$configPath)
-    Write-Host "Prepared $Samples samples, $Workers shards. Each shard has an independent output directory. No FDTD run started."
+    Write-Host "Prepared $Samples samples, $Workers queued shards, up to $Concurrency concurrent samples x $Threads threads. No FDTD run started."
     exit 0
 }
 
@@ -110,6 +120,8 @@ $controllerLock = $null
 $pidPath = Join-Path $jobRoot 'parallel_workers.json'
 $runtimeWorkers = @()
 Write-Host "Running up to $Concurrency concurrent samples, $Threads threads per sample."
+Write-Host "Package $($pythonInfo.version): $($pythonInfo.package_file)"
+Write-Host "CPU budget: $($pythonInfo.cpus); queued shards: $Workers; requested solver threads: $($Concurrency*$Threads)."
 try {
     try {
         $controllerLock = [System.IO.File]::Open((Join-Path $jobRoot '.parallel-controller.lock'),
@@ -119,14 +131,23 @@ try {
         $previousWorkers = (Get-Content -LiteralPath $pidPath -Raw | ConvertFrom-Json).workers
         foreach ($previousWorker in $previousWorkers) {
             $previousProcess = Get-Process -Id $previousWorker.pid -ErrorAction SilentlyContinue
-            if ($null -ne $previousProcess -and $previousProcess.ProcessName -eq $previousWorker.process_name) {
+            $sameIdentity = $null -ne $previousProcess -and $previousProcess.ProcessName -eq $previousWorker.process_name
+            if ($sameIdentity -and $null -ne $previousWorker.started_at_unix) {
+                $currentStart = ([DateTimeOffset]$previousProcess.StartTime.ToUniversalTime()).ToUnixTimeSeconds()
+                $sameIdentity = [Math]::Abs($currentStart-$previousWorker.started_at_unix) -le 2
+            }
+            if ($sameIdentity) {
                 throw "A previous worker is still running (PID $($previousWorker.pid)); wait for it before restarting."
             }
         }
     }
+    @{ package_version=$pythonInfo.version; package_file=$pythonInfo.package_file; python=$pythonExe;
+       cpu_inventory=$pythonInfo.cpu_inventory; requested_concurrency=$Concurrency; threads_per_sample=$Threads;
+       shard_count=$Workers; samples=$Samples; started_at=(Get-Date).ToUniversalTime().ToString('o') } |
+        ConvertTo-Json -Depth 6 | Set-Content -LiteralPath (Join-Path $jobRoot 'parallel_launch.json') -Encoding UTF8
     while ($nextIndex -lt $Workers -or $active.Count -gt 0) {
         while ($nextIndex -lt $Workers -and $active.Count -lt $Concurrency) {
-            $workerArgs = @('-m','deta_generator','generate','--config',$configPath,'--processes','1','--threads',"$Threads",
+            $workerArgs = @('-m','deta_generator.worker','generate','--config',$configPath,'--processes','1','--threads',"$Threads",
                 '--shard-count',"$Workers",'--shard-index',"$nextIndex",'--output',(Join-Path $jobRoot "shard$nextIndex"),
                 '--pack-every',"$PackEvery",'--fail-fast')
             if ($Lumapi) { $workerArgs += @('--lumapi',$Lumapi) }
@@ -138,7 +159,9 @@ try {
             # Windows PowerShell 5.1 needs a retained native handle to expose
             # ExitCode reliably after a redirected child process has exited.
             $null = $process.Handle
-            $runtimeWorkers += @{ index=$nextIndex; pid=$process.Id; process_name=$process.ProcessName }
+            $runtimeWorkers = @($runtimeWorkers | Where-Object { $_.pid -ne $process.Id })
+            $runtimeWorkers += @{ index=$nextIndex; pid=$process.Id; process_name=$process.ProcessName;
+                started_at_unix=([DateTimeOffset]$process.StartTime.ToUniversalTime()).ToUnixTimeSeconds() }
             @{ workers=@($runtimeWorkers) } | ConvertTo-Json -Depth 4 | Set-Content -LiteralPath $pidPath -Encoding UTF8
             $active += [pscustomobject]@{ Index=$nextIndex; Process=$process }
             Write-Host "Started shard $nextIndex, PID $($process.Id). Log: $stdout"
@@ -156,7 +179,7 @@ try {
         }
         $active = $remaining
         if (((Get-Date)-$lastDisplay).TotalSeconds -ge 30 -or $active.Count -eq 0) {
-            $null = Show-Progress
+            $null = Show-Progress -WriteSnapshot
             $lastDisplay = Get-Date
         }
         if ($active.Count -gt 0) { Start-Sleep -Seconds 5 }

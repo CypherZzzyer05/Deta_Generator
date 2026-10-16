@@ -12,6 +12,7 @@ from .config import load_config
 from .lumerical import FDTDSimulator, locate_lumapi, mesh_audit
 from .pipeline import atomic_json, directory_lock, prepare_manifest, generate_dataset, pack_dataset
 from .merge import merge_shards
+from . import __version__
 
 ASSETS = Path(__file__).parent/'assets'
 
@@ -107,16 +108,18 @@ def native_check(config, preflight=False):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--version', action='version', version=__version__)
     parser.add_argument('command', choices=('init', 'doctor', 'preflight', 'plan', 'generate', 'pack', 'merge', 'status', 'parallel'))
     parser.add_argument('--config', type=Path, default=Path('job.json'))
     parser.add_argument('--job-dir', type=Path)
     parser.add_argument('--preset', choices=('au-metal', 'ag-metal', 'bare-metal', 'au-4', 'au-8', 'ag-4', 'ag-8', 'bare-4', 'bare-8'), default='au-metal')
     parser.add_argument('--metal-mesh-nm', type=float, help='Metal z step for init with a *-metal preset (default: 2.5 nm)')
     parser.add_argument('--samples', type=int)
-    parser.add_argument('--workers', type=int, default=4, help='Fixed number of parallel dataset shards')
-    parser.add_argument('--concurrency', type=int, help='Maximum simultaneous FDTD jobs (default: workers)')
+    parser.add_argument('--jobs', type=int, help='Independent samples simulated at the same time, e.g. 4 or 10')
+    parser.add_argument('--workers', type=int, help='Fixed shard count; default uses several small shards per active job')
+    parser.add_argument('--concurrency', type=int, help='Legacy alias for the active --jobs limit')
     parser.add_argument('--parallel-action', choices=('start', 'prepare', 'run', 'status', 'merge'), default='start')
-    parser.add_argument('--threads', type=int)
+    parser.add_argument('--threads', type=int, help='Threads per sample; parallel defaults to usable CPU budget divided by jobs')
     parser.add_argument('--processes', type=int)
     parser.add_argument('--lumapi', help='Path to installed lumapi.py or its containing directory')
     parser.add_argument('--output', type=Path, help='Relocate results without changing physical identity')
@@ -133,9 +136,12 @@ def main(argv=None):
             if args.metal_mesh_nm is not None or args.output is not None or args.limit is not None or args.processes is not None:
                 raise ValueError('Parallel uses a fixed Au100/metal8 task; use --job-dir, --workers, --concurrency and --threads')
             from .parallel import run_parallel
-            return run_parallel(args.job_dir or Path('jobs/au100_metal8_100'),
-                                100 if args.samples is None else args.samples, args.workers, args.concurrency,
-                                16 if args.threads is None else args.threads, args.lumapi, args.parallel_action, args.pack_every)
+            samples = 100 if args.samples is None else args.samples
+            return run_parallel(args.job_dir or Path(f'jobs/au100_metal8_{samples}'),
+                                samples,args.workers,args.concurrency,args.threads,args.lumapi,
+                                args.parallel_action,args.pack_every,jobs=args.jobs)
+        if args.jobs is not None or args.workers is not None or args.concurrency is not None:
+            raise ValueError('--jobs/--workers/--concurrency require the parallel command; generate runs one structure at a time')
         if args.metal_mesh_nm is not None and args.command != 'init':
             raise ValueError('--metal-mesh-nm is an init option; use a new task when changing the mesh')
         if args.command == 'init':
@@ -166,6 +172,8 @@ def main(argv=None):
             elif args.command == 'merge':
                 result = merge_shards(config, args.shards or [])
             else:
+                if args.shard_count == 1:
+                    logging.info('SERIAL: one structure at a time; --threads applies to that structure. For simultaneous structures use parallel --jobs 4 or --jobs 10.')
                 if args.shard_count > 1 and args.output is None:
                     raise ValueError('Use a separate --output directory for each shard')
                 ids = range(args.shard_index, config.sample_count, args.shard_count)

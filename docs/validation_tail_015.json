@@ -1,0 +1,22 @@
+{
+  "package_version": "0.1.5",
+  "software_tests_passed": 88,
+  "new_tail_tests": 12,
+  "test_log": "tmp_full_tests_015.log",
+  "test_simulator_concurrent_samples": [
+    4,
+    10
+  ],
+  "native_fdtd_performance_tested": false,
+  "original_success_files_unchanged_tested": true,
+  "single_file_on_014_plan_and_run_tested": true,
+  "owned_controller_stop_and_unrelated_process_preservation_tested": true,
+  "physical_core_byte_identical_to": "d35973a / 0.1.4",
+  "physical_core_sha256": {
+    "config.py": "b0888e063c7a9bf6bfbbef747cd99a2817a3b130a8ad65d574868fdaebbceed1",
+    "lumerical.py": "e53b59a59347503c105c24cde90dba5a136a32f38307d620802e0bb5189f33ad",
+    "pipeline.py": "73c41fc576bcbc4580e95c794cfa04aefd492d31f6b8fa9e0a5c48142a82e810"
+  },
+  "wheel_sha256": "61e290e0bd3b93841a5b34c790120ec983f823c2261f7d61a2a65bcd441240d0",
+  "script_sha256": "20503601b1fc59ddcee676c68b64b1a27da4b4f95e352cdc8c776e34a85d4ec1"
+}

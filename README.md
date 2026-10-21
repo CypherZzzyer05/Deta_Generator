@@ -1,5 +1,7 @@
 # Deta Generator：七参数FDTD数据生成包
 
+**0.1.5 尾部加速：** 原任务进入最后几个分片时，可校验保留成功数据，停止原采集进程，再将剩余样本按单个编号动态分发。支持单文件脚本配合原 0.1.4 包运行，无需重装正在使用的环境。操作及当前未保存仿真进度的影响见 [尾部加速说明](docs/tail_resume.md)。物理求解实现与既有 0.1.4 完全相同。
+
 独立于模型训练项目，用于在另一台已安装 **Lumerical FDTD的Windows计算机**上生成As₂Se₃四聚体真实光谱数据。支持Au、Ag及有限基板不镀金对照。无需安装PyTorch、CUDA或Metaformer训练代码；求解采用Lumerical原生CPU引擎，增加线程不会保证等比例加速。
 
 七参数顺序为 `[P,L,H,dX,dY,theta_odd_deg,theta_even_deg]`，前五项nm，后两项deg。代码键为 `p,l,h,alpha_x,alpha_y,theta_odd_deg,theta_even_deg`。I/III共享奇数角，II/IV共享偶数角，各柱绕自身中心旋转，角度独立且以90°为周期。dX/dY是未旋转时的名义边缘间隙；每个采样结构检查旋转后的碰撞与周期边界。

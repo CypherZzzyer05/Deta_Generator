@@ -1,5 +1,7 @@
 # Deta Generator：七参数FDTD数据生成包
 
+**合并恢复：** 最终保存 `merged/manifest.json` 遇到 Windows 拒绝访问时，可用独立脚本只校验合并已有分片，无需重跑 FDTD 或更新环境，见 [合并恢复说明](docs/merge_recovery.md)。
+
 **0.1.5 尾部加速：** 原任务进入最后几个分片时，可校验保留成功数据，停止原采集进程，再将剩余样本按单个编号动态分发。支持单文件脚本配合原 0.1.4 包运行，无需重装正在使用的环境。操作及当前未保存仿真进度的影响见 [尾部加速说明](docs/tail_resume.md)。物理求解实现与既有 0.1.4 完全相同。
 
 独立于模型训练项目，用于在另一台已安装 **Lumerical FDTD的Windows计算机**上生成As₂Se₃四聚体真实光谱数据。支持Au、Ag及有限基板不镀金对照。无需安装PyTorch、CUDA或Metaformer训练代码；求解采用Lumerical原生CPU引擎，增加线程不会保证等比例加速。

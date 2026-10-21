@@ -1,0 +1,14 @@
+{
+  "recovery_tests_passed": 6,
+  "windows_real_destination_read_lock_recovery_verified": true,
+  "solver_run_performed": false,
+  "existing_014_single_file_compatibility_verified": true,
+  "source_data_preservation_and_repeat_merge_verified": true,
+  "physical_core_unchanged_from": "416c620 / 0.1.4 physical implementation",
+  "physical_core_sha256": {
+    "config.py": "b0888e063c7a9bf6bfbbef747cd99a2817a3b130a8ad65d574868fdaebbceed1",
+    "lumerical.py": "e53b59a59347503c105c24cde90dba5a136a32f38307d620802e0bb5189f33ad",
+    "pipeline.py": "73c41fc576bcbc4580e95c794cfa04aefd492d31f6b8fa9e0a5c48142a82e810"
+  },
+  "recovery_script_sha256": "575808942b66b0b5586778c3fbf0c333fa69c8feb2f56ea702650241cf13c477"
+}
